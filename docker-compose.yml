@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hostelhaven-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hostelhaven
+      POSTGRES_PASSWORD: hostelhaven
+      POSTGRES_DB: hostelhaven
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hostelhaven -d hostelhaven"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cms:
+    image: node:22-alpine
+    working_dir: /app/cms
+    command: sh -c "npm install && npm run develop"
+    volumes:
+      - .:/app
+    ports:
+      - "1337:1337"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - cms
+
+volumes:
+  pgdata:

@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "hostels",
+  "info": {
+    "singularName": "hostel",
+    "pluralName": "hostels",
+    "displayName": "Hostel"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2
+    },
+    "address": {
+      "type": "string",
+      "required": true,
+      "minLength": 3
+    },
+    "floors": {
+      "type": "integer",
+      "min": 1
+    },
+    "kitchens": {
+      "type": "integer",
+      "min": 0
+    },
+    "parking": {
+      "type": "string"
+    },
+    "showers": {
+      "type": "integer",
+      "min": 0
+    },
+    "toilets": {
+      "type": "integer",
+      "min": 0
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "rooms": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::room.room",
+      "mappedBy": "hostel"
+    },
+    "guests": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::guest.guest",
+      "mappedBy": "hostel"
+    }
+  }
+}

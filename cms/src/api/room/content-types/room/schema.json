@@ -1,0 +1,70 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rooms",
+  "info": {
+    "singularName": "room",
+    "pluralName": "rooms",
+    "displayName": "Room"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "number": {
+      "type": "string",
+      "required": true
+    },
+    "floor": {
+      "type": "integer",
+      "required": true
+    },
+    "beds": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "max": 100
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "standard",
+        "economy",
+        "vip"
+      ],
+      "required": true
+    },
+    "pricePerBed": {
+      "type": "integer",
+      "required": true,
+      "min": 0
+    },
+    "hasBalcony": {
+      "type": "boolean",
+      "default": false
+    },
+    "hasPrivateBathroom": {
+      "type": "boolean",
+      "default": false
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "hostel": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::hostel.hostel",
+      "inversedBy": "rooms"
+    },
+    "guests": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::guest.guest",
+      "mappedBy": "room"
+    }
+  }
+}

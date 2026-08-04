@@ -1,0 +1,14 @@
+{
+  "name": "hostelhaven-backend-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "API tests for the HostelHaven Strapi backend (Jest + Supertest)",
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
+  }
+}

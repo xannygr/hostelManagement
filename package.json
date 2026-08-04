@@ -1,0 +1,16 @@
+{
+  "name": "hostelhaven",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "concurrently -n cms,frontend -c magenta,green \"npm --prefix cms run develop\" \"npm --prefix frontend run dev\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:cms": "npm --prefix cms run develop",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

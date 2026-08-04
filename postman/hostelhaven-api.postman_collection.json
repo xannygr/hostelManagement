@@ -1,0 +1,839 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "HostelHaven API",
+    "description": "API-тесты для HostelHaven (Strapi 5). Перед запуском выполните Login из папки Auth — он сохраняет JWT в переменную коллекции {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:1337"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "hostelId",
+      "value": ""
+    },
+    {
+      "key": "roomId",
+      "value": ""
+    },
+    {
+      "key": "guestId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns a jwt', () => pm.response.json().jwt);",
+                  "pm.collectionVariables.set('token', pm.response.json().jwt);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@hostel.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/local",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "local"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns user with jwt', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.jwt).to.be.ok;",
+                  "  pm.expect(body.user.username).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman-user\",\n  \"email\": \"postman-user@example.com\",\n  \"password\": \"Test1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/local/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "local", "register"]
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the authenticated user', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.be.ok;",
+                  "  pm.expect(body.email).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hostels",
+      "item": [
+        {
+          "name": "List hostels",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns an array of hostels', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data).to.be.an('array');",
+                  "  pm.expect(data.length).to.be.greaterThan(0);",
+                  "  pm.expect(data[0].documentId).to.be.ok;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels"]
+            }
+          }
+        },
+        {
+          "name": "Create hostel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('creates a hostel', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.documentId).to.be.ok;",
+                  "  pm.expect(data.name).to.eql('Postman Hostel');",
+                  "  pm.collectionVariables.set('hostelId', data.documentId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"name\": \"Postman Hostel\",\n    \"address\": \"123 Test Street\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels"]
+            }
+          }
+        },
+        {
+          "name": "Get one hostel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the requested hostel', () => {",
+                  "  pm.expect(pm.response.json().data.documentId).to.eql(pm.collectionVariables.get('hostelId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels/{{hostelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels", "{{hostelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update hostel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('updates the hostel', () => {",
+                  "  pm.expect(pm.response.json().data.address).to.eql('456 Updated Street');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"address\": \"456 Updated Street\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels/{{hostelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels", "{{hostelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete hostel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels/{{hostelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels", "{{hostelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Verify hostel deleted (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hostels/{{hostelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hostels", "{{hostelId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "List rooms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns an array of rooms', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data).to.be.an('array');",
+                  "  pm.expect(data.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "Create room (linked to hostel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('creates a room linked to the hostel', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.documentId).to.be.ok;",
+                  "  pm.expect(data.beds).to.eql(4);",
+                  "  pm.expect(data.hostel.documentId).to.eql(pm.collectionVariables.get('hostelId'));",
+                  "  pm.collectionVariables.set('roomId', data.documentId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"number\": \"R-{{$randomInt}}\",\n    \"floor\": 1,\n    \"beds\": 4,\n    \"type\": \"standard\",\n    \"pricePerBed\": 100,\n    \"hostel\": {\n      \"connect\": [\"{{hostelId}}\"]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms?populate=hostel",
+              "host": ["{{baseUrl}}"],
+              "query": [
+                {
+                  "key": "populate",
+                  "value": "hostel"
+                }
+              ],
+              "path": ["api", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "Update room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('updates the room', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.pricePerBed).to.eql(95);",
+                  "  pm.expect(data.beds).to.eql(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"pricePerBed\": 95,\n    \"beds\": 3\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guests",
+      "item": [
+        {
+          "name": "List guests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns an array of guests', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data).to.be.an('array');",
+                  "  pm.expect(data.length).to.be.greaterThan(0);",
+                  "  pm.expect(data[0].checkIn).to.be.ok;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/guests?populate[hostel]=true&populate[room]=true",
+              "host": ["{{baseUrl}}"],
+              "query": [
+                {
+                  "key": "populate[hostel]",
+                  "value": "true"
+                },
+                {
+                  "key": "populate[room]",
+                  "value": "true"
+                }
+              ],
+              "path": ["api", "guests"]
+            }
+          }
+        },
+        {
+          "name": "Create guest (linked to room and hostel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('creates a guest linked to room and hostel', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.documentId).to.be.ok;",
+                  "  pm.expect(data.status).to.eql('active');",
+                  "  pm.expect(data.hostel.documentId).to.eql(pm.collectionVariables.get('hostelId'));",
+                  "  pm.expect(data.room.documentId).to.eql(pm.collectionVariables.get('roomId'));",
+                  "  pm.collectionVariables.set('guestId', data.documentId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"+48 600 000 000\",\n    \"email\": \"john.doe@example.com\",\n    \"passport\": \"PL 123456\",\n    \"checkIn\": \"2026-08-10\",\n    \"checkOut\": \"2026-08-20\",\n    \"status\": \"active\",\n    \"hostel\": {\n      \"connect\": [\"{{hostelId}}\"]\n    },\n    \"room\": {\n      \"connect\": [\"{{roomId}}\"]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/guests?populate[hostel]=true&populate[room]=true",
+              "host": ["{{baseUrl}}"],
+              "query": [
+                {
+                  "key": "populate[hostel]",
+                  "value": "true"
+                },
+                {
+                  "key": "populate[room]",
+                  "value": "true"
+                }
+              ],
+              "path": ["api", "guests"]
+            }
+          }
+        },
+        {
+          "name": "Update guest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('updates the guest', () => {",
+                  "  pm.expect(pm.response.json().data.status).to.eql('checked_out');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"status\": \"checked_out\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/guests/{{guestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "guests", "{{guestId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete guest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/guests/{{guestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "guests", "{{guestId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "List payments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns an array of payments', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data).to.be.an('array');",
+                  "  pm.expect(data.length).to.be.greaterThan(0);",
+                  "  pm.expect(data[0].amount).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments?populate[guest]=true",
+              "host": ["{{baseUrl}}"],
+              "query": [
+                {
+                  "key": "populate[guest]",
+                  "value": "true"
+                }
+              ],
+              "path": ["api", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Create payment (linked to guest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('creates a payment linked to the guest', () => {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.documentId).to.be.ok;",
+                  "  pm.expect(data.amount).to.eql(500);",
+                  "  pm.expect(data.guest.documentId).to.eql(pm.collectionVariables.get('guestId'));",
+                  "  pm.collectionVariables.set('paymentId', data.documentId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"amount\": 500,\n    \"dueDate\": \"2026-08-10\",\n    \"type\": \"card\",\n    \"status\": \"paid\",\n    \"smsSent\": false,\n    \"guest\": {\n      \"connect\": [\"{{guestId}}\"]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments?populate=guest",
+              "host": ["{{baseUrl}}"],
+              "query": [
+                {
+                  "key": "populate",
+                  "value": "guest"
+                }
+              ],
+              "path": ["api", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Update payment status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('updates the payment', () => {",
+                  "  pm.expect(pm.response.json().data.status).to.eql('overdue');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"status\": \"overdue\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{paymentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "{{paymentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{paymentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "{{paymentId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

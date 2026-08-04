@@ -1,0 +1,57 @@
+export interface Hostel {
+  id: string;
+  name: string;
+  address: string;
+  totalRooms: number;
+  totalBeds: number;
+  occupiedBeds: number;
+  monthlyRevenue: number;
+  image?: string;
+  floors?: number;
+  kitchens?: number;
+  parking?: string;
+  showers?: number;
+  toilets?: number;
+}
+
+export interface Room {
+  id: string;
+  hostelId: string;
+  number: string;
+  floor: number;
+  beds: number;
+  occupiedBeds: number;
+  type: 'standard' | 'economy' | 'vip';
+  pricePerBed: number;
+  photos?: string[];
+  hasBalcony?: boolean;
+  hasPrivateBathroom?: boolean;
+}
+
+export interface Guest {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  passport: string;
+  roomId: string;
+  hostelId: string;
+  checkIn: string;
+  checkOut: string;
+  status: 'active' | 'checked_out' | 'reserved';
+  totalPaid: number;
+  totalDue: number;
+}
+
+export interface Payment {
+  id: string;
+  guestId: string;
+  guestName: string;
+  roomId: string;
+  amount: number;
+  dueDate: string;
+  paidDate?: string;
+  type: 'cash' | 'card' | 'transfer';
+  status: 'paid' | 'pending' | 'overdue';
+  smsSent: boolean;
+}

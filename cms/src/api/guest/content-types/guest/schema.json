@@ -1,0 +1,65 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guests",
+  "info": {
+    "singularName": "guest",
+    "pluralName": "guests",
+    "displayName": "Guest"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "passport": {
+      "type": "string"
+    },
+    "checkIn": {
+      "type": "date",
+      "required": true
+    },
+    "checkOut": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "active",
+        "checked_out",
+        "reserved"
+      ],
+      "required": true
+    },
+    "hostel": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::hostel.hostel",
+      "inversedBy": "guests"
+    },
+    "room": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::room.room",
+      "inversedBy": "guests"
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "guest"
+    }
+  }
+}
