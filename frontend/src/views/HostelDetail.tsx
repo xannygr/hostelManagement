@@ -24,6 +24,7 @@ export default function HostelDetail() {
   const [editAddress, setEditAddress] = useState('');
   const [guestStatusFilter, setGuestStatusFilter] = useState<string>('all');
   const [guestPaymentFilter, setGuestPaymentFilter] = useState<string>('all');
+  const [residentPaymentFilter, setResidentPaymentFilter] = useState<string>('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
   const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all');
   const [roomTypeFilter, setRoomTypeFilter] = useState<string>('all');
@@ -153,7 +154,11 @@ export default function HostelDetail() {
               <GuestsList guests={hostelGuests} search={searchQuery} statusFilter={guestStatusFilter} paymentFilter={guestPaymentFilter} />
             </>
           )}
-          {activeTab === 'residents' && <><TabActions search={searchQuery} onSearch={setSearchQuery} /><ResidentsList guests={activeGuests} search={searchQuery} /></>}
+          {activeTab === 'residents' && <>
+            <TabActions search={searchQuery} onSearch={setSearchQuery} />
+            <ResidentFilterBar paymentFilter={residentPaymentFilter} onPaymentFilter={setResidentPaymentFilter} />
+            <ResidentsList guests={activeGuests} search={searchQuery} paymentFilter={residentPaymentFilter} />
+          </>}
           {activeTab === 'debtors' && <><TabActions search={searchQuery} onSearch={setSearchQuery} /><DebtorsList guests={debtors} search={searchQuery} /></>}
         </div>
         {activeTab === 'payments' && (
@@ -731,6 +736,26 @@ function GuestFilterBar({ filter, onFilter, paymentFilter, onPaymentFilter }: { 
   );
 }
 
+function ResidentFilterBar({ paymentFilter, onPaymentFilter }: { paymentFilter: string; onPaymentFilter: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 mb-4 flex-wrap">
+      <Filter size={14} className="text-gray-400" />
+      <div className="flex bg-gray-100 rounded-lg p-0.5">
+        {[
+          { key: 'all', label: 'Оплата: все' },
+          { key: 'paid', label: 'Оплатили' },
+          { key: 'unpaid', label: 'Не оплатили' },
+          { key: 'debt', label: 'Должники' },
+        ].map(f => (
+          <button key={f.key} onClick={() => onPaymentFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${paymentFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests: any[]; search: string; statusFilter: string; paymentFilter: string }) {
   const { rooms, payments } = useData();
   const filtered = g.filter(x => {
@@ -861,9 +886,14 @@ function DebtorsList({ guests: g, search }: { guests: any[]; search: string }) {
   );
 }
 
-function ResidentsList({ guests: g, search }: { guests: any[]; search: string }) {
+function ResidentsList({ guests: g, search, paymentFilter }: { guests: any[]; search: string; paymentFilter: string }) {
   const { rooms, payments } = useData();
-  const filtered = g.filter(x => x.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = g.filter(x => {
+    const matchesSearch = x.name.toLowerCase().includes(search.toLowerCase());
+    const due = guestTotalDue(x.id, payments);
+    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'unpaid' ? payments.some(p => p.guestId === x.id && p.status !== 'paid') : payments.some(p => p.guestId === x.id && p.status === 'overdue'));
+    return matchesSearch && matchesPayment;
+  });
   if (filtered.length === 0) return <EmptyState text="Нет жильцов" />;
   return (
     <div className="space-y-2">
