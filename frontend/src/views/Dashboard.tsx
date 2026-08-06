@@ -167,7 +167,7 @@ export default function Dashboard() {
               { label: 'SMS отправлено', color: 'bg-blue-400' },
             ]}
           />
-          <div className="overflow-x-auto">
+          <div className="overflow-x-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
@@ -202,16 +202,16 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-gray-500">{entry.count}</td>
                       <td className="px-4 py-3">
                         {entry.hasOverdue ? (
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${overdueDays > 14 ? 'bg-red-100 text-red-700' : overdueDays > 7 ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${overdueDays > 14 ? 'bg-red-100 text-red-700' : overdueDays > 7 ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
                             Просрочка {overdueDays} дн.
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Ожидает</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 whitespace-nowrap">Ожидает</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         {entry.smsSent ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                             <Send size={9} /> Отправлено
                           </span>
                         ) : (

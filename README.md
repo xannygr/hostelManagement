@@ -123,6 +123,15 @@ Strapi при первом старте сам создаёт БД-схему, �
 
 - Railway инжектит `PORT` — оба сервиса слушают на нём (entrypoint использует
   `${PORT}`, Dockerfile frontend тоже).
+- **Защита / rate limit:**
+  - **CMS без публичного домена** (Networking → убрать public). Иначе с
+    `APP_PROXY=true` Strapi доверяет `x-forwarded-for` любому источнику, и
+    rate limit обходится подменой заголовка.
+  - Rate limit работает по реальному IP клиента за счёт
+    `frontend/src/middleware.ts` (прокидывает `x-forwarded-for`) +
+    `server.proxy.koa`. Без этого Strapi видел бы одно IP прокси.
+  - Store лимита в памяти (`koa2-ratelimit`) — на один инстанс. При
+    масштабировании CMS на несколько инстансов нужен общий store (например Redis).
 - Если CMS не может подключиться к Postgres — поставьте `DATABASE_SSL=true`.
 - Вольюм `/app/public/uploads` нужен для сохранения фото между редеплоями.
 
