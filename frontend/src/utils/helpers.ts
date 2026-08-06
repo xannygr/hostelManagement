@@ -16,6 +16,12 @@ export function paymentIsDue(p: Payment, today: string): boolean {
   return p.status !== 'paid' && p.dueDate <= today;
 }
 
+export function paymentStatus(p: Payment, today = new Date().toISOString().split('T')[0]): Payment['status'] {
+  if (p.status === 'paid') return 'paid';
+  if (p.status === 'pending' && p.dueDate <= today) return 'overdue';
+  return p.status;
+}
+
 export function guestTotalDue(guestId: string, payments: Payment[], today = new Date().toISOString().split('T')[0]): number {
   return payments.filter(p => p.guestId === guestId && paymentIsDue(p, today)).reduce((s, p) => s + p.amount, 0);
 }

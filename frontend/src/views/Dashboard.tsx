@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, Users, TrendingUp, ArrowUpRight, DoorOpen, Phone, AlertTriangle, Send, CalendarCheck, DollarSign, BarChart3, X, MessageSquare } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { hostelOccupiedBeds, roomOccupiedBeds, paymentIsDue } from '../utils/helpers';
+import { hostelOccupiedBeds, roomOccupiedBeds, paymentIsDue, paymentStatus } from '../utils/helpers';
 import Legend from '../components/Legend';
 
 function todayStr() {
@@ -54,7 +54,7 @@ export default function Dashboard() {
     acc[p.guestId].count += 1;
     acc[p.guestId].paymentIds.push(p.id);
     if (p.smsSent) acc[p.guestId].smsSent = true;
-    if (p.status === 'overdue') acc[p.guestId].hasOverdue = true;
+    if (p.status === 'overdue' || (p.status === 'pending' && p.dueDate <= today)) acc[p.guestId].hasOverdue = true;
     return acc;
   }, {});
   allUnpaidPayments.forEach(p => {
@@ -331,9 +331,9 @@ export default function Dashboard() {
 
         const monthShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
         const maxEarnings = Math.max(...sortedMonths.map(m => earningsByMonth[m]?.total || 0), 1);
-        const statPaid = sortedMonths.reduce((s, m) => s + (earningsByMonth[m]?.paid || 0), 0);
-        const statPending = sortedMonths.reduce((s, m) => s + (earningsByMonth[m]?.pending || 0), 0);
-        const statOverdue = sortedMonths.reduce((s, m) => s + (earningsByMonth[m]?.overdue || 0), 0);
+        const statPaid = filteredPayments.filter(p => paymentStatus(p) === 'paid').reduce((s, p) => s + p.amount, 0);
+        const statPending = filteredPayments.filter(p => paymentStatus(p) === 'pending').reduce((s, p) => s + p.amount, 0);
+        const statOverdue = filteredPayments.filter(p => paymentStatus(p) === 'overdue').reduce((s, p) => s + p.amount, 0);
         const statTotal = statPaid + statPending + statOverdue;
         const statAvg = sortedMonths.length ? Math.round(statTotal / sortedMonths.length) : 0;
         const maxOccNights = Math.max(...sortedMonths.map(m => occByMonth[m]?.guestNights || 0), 1);

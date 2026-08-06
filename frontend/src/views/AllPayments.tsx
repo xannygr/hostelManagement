@@ -3,6 +3,7 @@ import { Search, Phone, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
 import Legend from '../components/Legend';
+import { paymentStatus } from '../utils/helpers';
 
 export default function AllPayments() {
   const { payments, rooms, guests } = useData();
@@ -12,15 +13,15 @@ export default function AllPayments() {
 
   const filtered = payments.filter(p => {
     const matchesSearch = p.guestName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || paymentStatus(p) === statusFilter;
     const matchesType = typeFilter === 'all' || p.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const totalPaid = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
-  const totalPending = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
-  const totalOverdue = payments.filter(p => p.status === 'overdue').reduce((s, p) => s + p.amount, 0);
-  const smsSentCount = payments.filter(p => p.status === 'overdue' && p.smsSent).length;
+  const totalPaid = payments.filter(p => paymentStatus(p) === 'paid').reduce((s, p) => s + p.amount, 0);
+  const totalPending = payments.filter(p => paymentStatus(p) === 'pending').reduce((s, p) => s + p.amount, 0);
+  const totalOverdue = payments.filter(p => paymentStatus(p) === 'overdue').reduce((s, p) => s + p.amount, 0);
+  const smsSentCount = payments.filter(p => paymentStatus(p) === 'overdue' && p.smsSent).length;
 
   return (
     <div className="p-8">
@@ -107,6 +108,7 @@ export default function AllPayments() {
           <tbody className="divide-y divide-gray-50">
             {filtered.map(payment => {
               const guest = guests.find(g => g.id === payment.guestId);
+              const status = paymentStatus(payment);
               return (
               <tr key={payment.id} className="hover:bg-gray-50 transition-colors group">
                 <td className="px-6 py-4">
@@ -119,7 +121,7 @@ export default function AllPayments() {
                         href={`tel:${guest.phone.replace(/\s/g, '')}`}
                         onClick={e => e.stopPropagation()}
                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-                          payment.status === 'overdue'
+                          status === 'overdue'
                             ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                             : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 opacity-0 group-hover:opacity-100'
                         }`}
@@ -137,12 +139,12 @@ export default function AllPayments() {
                 <td className="px-6 py-4 text-gray-500">{payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                      payment.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
-                      payment.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                      status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                      status === 'pending' ? 'bg-amber-100 text-amber-700' :
                       'bg-red-100 text-red-700'
                     }`}>
-                      {payment.status === 'paid' ? 'Оплачено' : payment.status === 'pending' ? 'Ожидает' : 'Просрочено'}
+                      {status === 'paid' ? 'Оплачено' : status === 'pending' ? 'Ожидает' : 'Просрочено'}
                     </span>
                     {payment.smsSent && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
