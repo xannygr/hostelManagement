@@ -27,6 +27,7 @@ ENV HOST=0.0.0.0
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 COPY --from=build /app/src ./src
 COPY --from=build /app/config ./config
 COPY --from=build /app/data ./data
