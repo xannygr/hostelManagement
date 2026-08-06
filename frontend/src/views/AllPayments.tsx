@@ -3,13 +3,26 @@ import { Search, Phone, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
 import Legend from '../components/Legend';
+import Modal from '../components/Modal';
 import { paymentStatus } from '../utils/helpers';
 
 export default function AllPayments() {
-  const { payments, rooms, guests } = useData();
+  const { payments, rooms, guests, hostels, updatePayment } = useData();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [smsPreview, setSmsPreview] = useState<{ text: string; guestName: string; guestPhone: string; paymentId: string } | null>(null);
+
+  const getSmsText = (payment: any, guest: any) => {
+    const hostel = hostels.find((h: any) => h.id === guest?.hostelId);
+    return `Уважаемый/ая ${payment.guestName.split(' ')[0]}, напоминаем об оплате в размере ${payment.amount.toLocaleString()} зл, срок которой ${payment.dueDate}. Хостел ${hostel?.name || ''}.`;
+  };
+
+  const confirmSendSms = () => {
+    if (!smsPreview) return;
+    updatePayment(smsPreview.paymentId, { smsSent: true });
+    setSmsPreview(null);
+  };
 
   const filtered = payments.filter(p => {
     const matchesSearch = p.guestName.toLowerCase().includes(search.toLowerCase());
@@ -24,6 +37,7 @@ export default function AllPayments() {
   const smsSentCount = payments.filter(p => paymentStatus(p) === 'overdue' && p.smsSent).length;
 
   return (
+    <>
     <div className="p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Платежи</h1>
@@ -130,6 +144,20 @@ export default function AllPayments() {
                         <Phone size={13} />
                       </a>
                     )}
+                    {(status === 'overdue' || status === 'pending') && (
+                      <button
+                        onClick={e => { e.stopPropagation(); setSmsPreview({
+                          text: getSmsText(payment, guest),
+                          guestName: payment.guestName,
+                          guestPhone: guest?.phone || '',
+                          paymentId: payment.id,
+                        }); }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center transition-colors shrink-0 bg-blue-100 text-blue-600 hover:bg-blue-200"
+                        title="Отправить SMS"
+                      >
+                        <Send size={13} />
+                      </button>
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-gray-500">{rooms.find(r => r.id === payment.roomId)?.number}</td>
@@ -162,5 +190,35 @@ export default function AllPayments() {
         </div>
       </div>
     </div>
+
+    <Modal isOpen={!!smsPreview} onClose={() => setSmsPreview(null)} title="Отправка SMS">
+      {smsPreview && (
+        <div className="space-y-4">
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-200">
+              <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">
+                {smsPreview.guestName[0]}
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">{smsPreview.guestName}</p>
+                <p className="text-xs text-gray-400">{smsPreview.guestPhone}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{smsPreview.text}</p>
+            <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-200">{smsPreview.text.length} символов</p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setSmsPreview(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">
+              Отмена
+            </button>
+            <button onClick={confirmSendSms} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-sm inline-flex items-center justify-center gap-2">
+              <Send size={14} />
+              Отправить
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+    </>
   );
 }
