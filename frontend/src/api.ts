@@ -174,67 +174,77 @@ async function fetchAllPages<T>(path: string, pageSize = 500): Promise<T[]> {
   return out;
 }
 
+export function normalizeAllData(
+  rawHostels: RawHostel[],
+  rawRooms: RawRoom[],
+  rawGuests: RawGuest[],
+  rawPayments: RawPayment[],
+  today = todayStr()
+): AllData {
+  const payments: Payment[] = rawPayments.map((p) => ({
+    id: p.documentId,
+    guestId: p.guest?.documentId ?? '',
+    guestName: p.guest?.name ?? '',
+    roomId: p.guest?.room?.documentId ?? '',
+    amount: p.amount,
+    dueDate: p.dueDate,
+    paidDate: p.paidDate ?? undefined,
+    type: p.type,
+    status: p.status,
+    smsSent: p.smsSent,
+  }));
+
+  const guests: Guest[] = rawGuests.map((g) => {
+    const paid = payments
+      .filter((p) => p.guestId === g.documentId && p.status === 'paid')
+      .reduce((s, p) => s + p.amount, 0);
+    const due = payments
+      .filter((p) => p.guestId === g.documentId && (p.status === 'pending' || p.status === 'overdue') && p.dueDate <= today)
+      .reduce((s, p) => s + p.amount, 0);
+    return {
+      id: g.documentId,
+      name: g.name,
+      phone: g.phone,
+      email: g.email ?? '',
+      passport: g.passport ?? '',
+      roomId: g.room?.documentId ?? '',
+      hostelId: g.hostel?.documentId ?? '',
+      checkIn: g.checkIn,
+      checkOut: g.checkOut,
+      status: g.status,
+      totalPaid: paid,
+      totalDue: due,
+    };
+  });
+
+  const rooms: Room[] = rawRooms.map((r) => ({
+    id: r.documentId,
+    hostelId: r.hostel?.documentId ?? '',
+    number: r.number,
+    floor: r.floor,
+    beds: r.beds,
+    occupiedBeds: guests.filter((g) => g.roomId === r.documentId && g.status === 'active').length,
+    type: r.type,
+    pricePerBed: r.pricePerBed,
+    hasBalcony: r.hasBalcony ?? false,
+    hasPrivateBathroom: r.hasPrivateBathroom ?? false,
+    photos: r.photos?.map((ph) => ph.url),
+  }));
+
+  const hostels: Hostel[] = rawHostels.map((h) => normalizeHostel(h, rooms, guests, payments));
+
+  return { hostels, rooms, guests, payments };
+}
+
 export function loadAll(): Promise<AllData> {
   return Promise.all([
     fetchAllPages<RawHostel>('/hostels?populate=image'),
     fetchAllPages<RawRoom>('/rooms?populate[hostel]=true&populate[photos]=true'),
     fetchAllPages<RawGuest>('/guests?populate[hostel]=true&populate[room]=true'),
     fetchAllPages<RawPayment>('/payments?populate[guest][populate][room]=true'),
-  ]).then(([rawHostels, rawRooms, rawGuests, rawPayments]) => {
-    const payments: Payment[] = rawPayments.map((p) => ({
-      id: p.documentId,
-      guestId: p.guest?.documentId ?? '',
-      guestName: p.guest?.name ?? '',
-      roomId: p.guest?.room?.documentId ?? '',
-      amount: p.amount,
-      dueDate: p.dueDate,
-      paidDate: p.paidDate ?? undefined,
-      type: p.type,
-      status: p.status,
-      smsSent: p.smsSent,
-    }));
-
-    const guests: Guest[] = rawGuests.map((g) => {
-      const paid = payments
-        .filter((p) => p.guestId === g.documentId && p.status === 'paid')
-        .reduce((s, p) => s + p.amount, 0);
-      const due = payments
-        .filter((p) => p.guestId === g.documentId && (p.status === 'pending' || p.status === 'overdue') && p.dueDate <= todayStr())
-        .reduce((s, p) => s + p.amount, 0);
-      return {
-        id: g.documentId,
-        name: g.name,
-        phone: g.phone,
-        email: g.email ?? '',
-        passport: g.passport ?? '',
-        roomId: g.room?.documentId ?? '',
-        hostelId: g.hostel?.documentId ?? '',
-        checkIn: g.checkIn,
-        checkOut: g.checkOut,
-        status: g.status,
-        totalPaid: paid,
-        totalDue: due,
-      };
-    });
-
-    const rooms: Room[] = rawRooms.map((r) => ({
-      id: r.documentId,
-      hostelId: r.hostel?.documentId ?? '',
-      number: r.number,
-      floor: r.floor,
-      beds: r.beds,
-      occupiedBeds: guests.filter((g) => g.roomId === r.documentId && g.status === 'active').length,
-      type: r.type,
-      pricePerBed: r.pricePerBed,
-      hasBalcony: r.hasBalcony ?? false,
-      hasPrivateBathroom: r.hasPrivateBathroom ?? false,
-      photos: r.photos?.map((ph) => ph.url),
-    }));
-
-    const hostels: Hostel[] = rawHostels.map((h) => normalizeHostel(h, rooms, guests, payments));
-
-    return { hostels, rooms, guests, payments };
-  });
+  ]).then(([rawHostels, rawRooms, rawGuests, rawPayments]) =>
+    normalizeAllData(rawHostels, rawRooms, rawGuests, rawPayments)
+  );
 }
 
 export function fetchHostelStats(): Promise<HostelStatsData> {

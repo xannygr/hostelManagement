@@ -60,6 +60,72 @@ npm run dev:frontend     # Next.js на http://localhost:3000 (rewrites /api н�
 3. Данные автоматически импортируются из `cms/data/mock.json` при первом
    старте Strapi (если БД пуста).
 
+## Деплой на Railway
+
+Проект подготовлен для деплоя на [Railway](https://railway.com): в `cms/` и
+`frontend/` лежат Dockerfile + `railway.json` (healthcheck, restart policy), а
+Strapi при первом старте сам создаёт БД-схему, роли и демо-данные.
+
+### 1. Проект и база
+
+1. Залейте репозиторий на GitHub.
+2. Railway → **New Project** → **Deploy from GitHub repo**.
+3. **New → Database → PostgreSQL** (обязательно). В настройках Postgres
+   нажмите **Variables** → **Link variables to service** → выберите сервис CMS,
+   чтобы в него прокинулся `DATABASE_URL`.
+
+### 2. Сервис CMS (Strapi)
+
+1. **New → Empty Service**, в настройках сервиса укажите **Root Directory**: `cms`.
+   Deploy использует `cms/Dockerfile` + `cms/railway.json`
+   (healthcheck `GET /api/health` → 200, запуск через `cms/scripts/entrypoint.sh`).
+2. Добавьте **Volume**: mount path `/app/public/uploads` — сюда Strapi пишет
+   загруженные фото (без вольюма медиа теряются при редеплое).
+3. Переменные сервиса **CMS**:
+
+   | Переменная | Значение | Обязательна |
+   | --- | --- | --- |
+   | `DATABASE_CLIENT` | `postgres` | да |
+   | `DATABASE_URL` | `${{ Postgres.DATABASE_URL }}` | да (ставится автоматически при link) |
+   | `ADMIN_PASSWORD` | ваш пароль для `admin@hostel.com` | нет, генерируется |
+   | `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` | свои значения | нет, генерируются |
+
+   Если секреты не заданы — entrypoint сгенерирует случайные при каждом старте
+   (сессии/JWT стабильны только с фиксированными значениями).
+4. Создайте **domain** для сервиса и скопируйте его URL вида `https://<cms>.up.railway.app`.
+
+> При первом старте Strapi: создаст схему, роли, пользователя
+> `admin@hostel.com` (пароль из `ADMIN_PASSWORD` или из логов деплоя) и
+> импортирует `cms/data/mock.json`. Панель управления: `https://<cms>/admin`
+> (первый раз — создание учётной записи админа панели).
+
+### 3. Сервис Frontend (Next.js)
+
+1. **New → Empty Service**, **Root Directory**: `frontend`. Используется
+   `frontend/Dockerfile` (standalone-сборка) + `frontend/railway.json`
+   (healthcheck `/`).
+2. Переменная сервиса **Frontend**:
+
+   | Переменная | Значение | Обязательна |
+   | --- | --- | --- |
+   | `API_TARGET` | `https://<cms>.up.railway.app` | да |
+
+   `API_TARGET` подставляется в `next.config.ts` **во время сборки**
+   (rewrites `/api` и `/uploads` на CMS), поэтому меняется только через редеплой.
+
+### 4. Вход в приложение
+
+- Дашборд: `https://<frontend>.up.railway.app` — вход `admin@hostel.com` +
+  пароль из `ADMIN_PASSWORD` (или из логов деплоя, если не задавали).
+- CMS-панель: `https://<cms>.up.railway.app/admin`.
+
+### Нюансы
+
+- Railway инжектит `PORT` — оба сервиса слушают на нём (entrypoint использует
+  `${PORT}`, Dockerfile frontend тоже).
+- Если CMS не может подключиться к Postgres — поставьте `DATABASE_SSL=true`.
+- Вольюм `/app/public/uploads` нужен для сохранения фото между редеплоями.
+
 ## API
 
 Strapi REST API (все запросы кроме auth требуют `Authorization: Bearer <jwt>`):
@@ -104,7 +170,7 @@ React Query (`DataContext`) с пагинацией по всем страниц
 
 ```bash
 npm test                   # 31 jest-тестов против Strapi API (Postgres)
-npm --prefix frontend test # 4 unit-теста хелперов (vitest)
+npm --prefix frontend test # 21 unit-тестов хелперов и нормализации API (vitest)
 npm run lint               # oxlint фронтенда
 npm --prefix frontend run build
 ```

@@ -5,6 +5,7 @@ import {
   hostelOccupiedBeds,
   guestTotalPaid,
   guestTotalDue,
+  paymentIsDue,
   guestsInRoomOnDate,
   totalOccupiedOnDate,
 } from './helpers';
@@ -86,5 +87,55 @@ describe('guestsInRoomOnDate / totalOccupiedOnDate', () => {
     ];
     expect(guestsInRoomOnDate('r1', '2026-07-07', guests)).toBe(1);
     expect(totalOccupiedOnDate('2026-07-07', guests)).toBe(1);
+  });
+
+  it('includes the check-in date but excludes the check-out date', () => {
+    const g = [guest({ roomId: 'r1', checkIn: '2026-07-01', checkOut: '2026-07-10' })];
+    expect(guestsInRoomOnDate('r1', '2026-07-01', g)).toBe(1);
+    expect(guestsInRoomOnDate('r1', '2026-07-09', g)).toBe(1);
+    expect(guestsInRoomOnDate('r1', '2026-07-10', g)).toBe(0);
+    expect(guestsInRoomOnDate('r1', '2026-06-30', g)).toBe(0);
+  });
+});
+
+describe('paymentIsDue', () => {
+  it('flags unpaid payments whose due date is today or earlier', () => {
+    expect(paymentIsDue(payment({ status: 'pending', dueDate: '2026-07-01' }), '2026-07-01')).toBe(true);
+    expect(paymentIsDue(payment({ status: 'overdue', dueDate: '2026-07-01' }), '2026-07-05')).toBe(true);
+  });
+
+  it('does not flag paid or future payments', () => {
+    expect(paymentIsDue(payment({ status: 'paid', dueDate: '2026-07-01' }), '2026-07-10')).toBe(false);
+    expect(paymentIsDue(payment({ status: 'pending', dueDate: '2026-07-10' }), '2026-07-01')).toBe(false);
+  });
+});
+
+describe('empty inputs', () => {
+  it('returns zero for all aggregators', () => {
+    expect(roomOccupiedBeds('r1', [])).toBe(0);
+    expect(hostelOccupiedBeds('h1', [])).toBe(0);
+    expect(guestTotalPaid('g1', [])).toBe(0);
+    expect(guestTotalDue('g1', [])).toBe(0);
+    expect(guestsInRoomOnDate('r1', '2026-07-01', [])).toBe(0);
+    expect(totalOccupiedOnDate('2026-07-01', [])).toBe(0);
+  });
+});
+
+describe('guestTotalDue with explicit today', () => {
+  it('filters out payments whose due date is after today', () => {
+    const payments = [
+      payment({ dueDate: '2026-07-01' }),
+      payment({ id: 'p2', dueDate: '2026-08-01' }),
+    ];
+    expect(guestTotalDue('g1', payments, '2026-07-05')).toBe(100);
+    expect(guestTotalDue('g1', payments, '2026-08-05')).toBe(200);
+  });
+
+  it('ignores payments attributed to other guests', () => {
+    const payments = [
+      payment({ guestId: 'other', amount: 999 }),
+      payment({ amount: 50 }),
+    ];
+    expect(guestTotalDue('g1', payments, '2026-07-05')).toBe(50);
   });
 });

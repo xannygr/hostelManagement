@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { randomBytes } from 'node:crypto';
 import { readFileSync, mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -141,6 +142,43 @@ async function seedPermissions(strapi: Core.Strapi) {
   }
 }
 
+async function ensureDefaultAdmin(strapi: Core.Strapi) {
+  const count = await strapi.db.query('plugin::users-permissions.user').count();
+  if (count > 0) return;
+
+  const role = await ensureRole(strapi, ADMIN_ROLE);
+  const password = process.env.ADMIN_PASSWORD || randomBytes(12).toString('base64url');
+
+  await strapi.plugin('users-permissions').service('user').add({
+    username: 'admin',
+    email: ADMIN_EMAIL,
+    password,
+    provider: 'local',
+    confirmed: true,
+    blocked: false,
+    role: role.id,
+  });
+  strapi.log.warn(
+    `[seed] created default dashboard user ${ADMIN_EMAIL} / ${password}. ` +
+      (process.env.ADMIN_PASSWORD
+        ? 'For safety, set a strong ADMIN_PASSWORD on first deploy.'
+        : 'Retrieve the password from the logs or set ADMIN_PASSWORD before first boot.'),
+  );
+}
+
+const HEALTH_ROUTE = '/api/health';
+
+function healthMiddleware(strapi: Core.Strapi) {
+  strapi.server.use(async (ctx, next) => {
+    if (ctx.method === 'GET' && ctx.path === HEALTH_ROUTE) {
+      ctx.status = 200;
+      ctx.body = { status: 'ok' };
+      return;
+    }
+    await next();
+  });
+}
+
 async function seed(strapi: Core.Strapi) {
   if (await isSeeded(strapi)) return;
 
@@ -244,6 +282,11 @@ export default {
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
 
   bootstrap({ strapi }: { strapi: Core.Strapi }) {
-    return Promise.all([seed(strapi), seedPermissions(strapi)]);
+    healthMiddleware(strapi);
+    return (async () => {
+      await seedPermissions(strapi);
+      await ensureDefaultAdmin(strapi);
+      await seed(strapi);
+    })();
   },
 };
