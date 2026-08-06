@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, Users, TrendingUp, ArrowUpRight, DoorOpen, Phone, AlertTriangle, Send, CalendarCheck, DollarSign, BarChart3, X, MessageSquare } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { hostelOccupiedBeds, roomOccupiedBeds } from '../utils/helpers';
+import { hostelOccupiedBeds, roomOccupiedBeds, paymentIsDue } from '../utils/helpers';
 import Legend from '../components/Legend';
 
 function todayStr() {
@@ -43,11 +43,12 @@ export default function Dashboard() {
   const totalRooms = filteredRooms.length;
   const occupiedRooms = filteredRooms.filter(r => filteredGuests.some(g => g.roomId === r.id && g.status === 'active')).length;
   const totalRevenue = filteredPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+  const today = todayStr();
   const overduePayments = filteredPayments.filter(p => p.status === 'overdue');
-  const allUnpaidPayments = filteredPayments.filter(p => p.status === 'overdue');
-  const unpaidByGuest = allUnpaidPayments.reduce<Record<string, { guestName: string; totalAmount: number; count: number; smsSent: boolean; guestId: string; hasOverdue: boolean; paymentIds: string[] }>>((acc, p) => {
+  const allUnpaidPayments = filteredPayments.filter(p => paymentIsDue(p, today));
+  const unpaidByGuest = allUnpaidPayments.reduce<Record<string, { guestName: string; totalAmount: number; count: number; smsSent: boolean; guestId: string; hostelId: string; hasOverdue: boolean; paymentIds: string[] }>>((acc, p) => {
     if (!acc[p.guestId]) {
-      acc[p.guestId] = { guestName: p.guestName, totalAmount: 0, count: 0, smsSent: false, guestId: p.guestId, hasOverdue: false, paymentIds: [] };
+      acc[p.guestId] = { guestName: p.guestName, totalAmount: 0, count: 0, smsSent: false, guestId: p.guestId, hostelId: '', hasOverdue: false, paymentIds: [] };
     }
     acc[p.guestId].totalAmount += p.amount;
     acc[p.guestId].count += 1;
@@ -56,7 +57,10 @@ export default function Dashboard() {
     if (p.status === 'overdue') acc[p.guestId].hasOverdue = true;
     return acc;
   }, {});
-  const today = todayStr();
+  allUnpaidPayments.forEach(p => {
+    const guest = guests.find(g => g.id === p.guestId);
+    if (guest && unpaidByGuest[p.guestId]) unpaidByGuest[p.guestId].hostelId = guest.hostelId;
+  });
   const checkoutsToday = filteredGuests.filter(g => g.checkOut === today);
 
   const totals = stats?.totals;
@@ -168,6 +172,7 @@ export default function Dashboard() {
               <thead>
                 <tr className="bg-gray-50 text-left">
                   <th className="px-4 py-3 font-medium text-gray-400">Гость</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">Хостел</th>
                   <th className="px-4 py-3 font-medium text-gray-400">Сумма долга</th>
                   <th className="px-4 py-3 font-medium text-gray-400">Платежей</th>
                   <th className="px-4 py-3 font-medium text-gray-400">Статус</th>
@@ -189,6 +194,9 @@ export default function Dashboard() {
                           </div>
                           <span className="font-medium text-gray-900 truncate">{entry.guestName}</span>
                         </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-gray-500 truncate">{hostels.find(h => h.id === entry.hostelId)?.name || '—'}</span>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-red-500">{entry.totalAmount.toLocaleString()} зл</td>
                       <td className="px-4 py-3 text-gray-500">{entry.count}</td>
