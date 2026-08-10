@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Bell, ArrowLeft, X, RotateCcw
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { paymentStatus } from '../utils/helpers';
 
 interface SmsRule {
   id: string;
@@ -94,9 +95,9 @@ export default function SmsPage() {
   const [smsPreview, setSmsPreview] = useState<{ payment: any; text: string } | null>(null);
 
   const activeRulesCount = rules.filter(r => r.enabled).length;
-  const overduePayments = payments.filter(p => p.status === 'overdue');
-  const pendingPayments = payments.filter(p => p.status === 'pending');
-  const smsSentPayments = payments.filter(p => p.smsSent || p.status === 'overdue' || resentIds.has(p.id));
+  const overduePayments = payments.filter(p => paymentStatus(p) === 'overdue');
+  const pendingPayments = payments.filter(p => paymentStatus(p) === 'pending');
+  const smsSentPayments = payments.filter(p => paymentStatus(p) === 'overdue' || p.smsSent || resentIds.has(p.id));
 
   const toggleRule = (id: string) => {
     setRules(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
@@ -175,7 +176,7 @@ export default function SmsPage() {
       ? hostels.find(h => h.id === guests.find(g => g.id === p.guestId)?.hostelId)
       : null;
     const overdueDays = Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24));
-    const rule = p.status === 'overdue'
+    const rule = paymentStatus(p) === 'overdue'
       ? (overdueDays > 3 ? rules.find(r => r.id === 'after3') : rules.find(r => r.id === 'after1'))
       : rules.find(r => r.id === '3days');
     const template = rule?.template || defaultRules[0].template;
@@ -391,6 +392,7 @@ export default function SmsPage() {
                       const guest = guests.find(g => g.id === p.guestId);
                       const room = rooms.find(r => r.id === p.roomId);
                       const hostel = guest ? hostels.find(h => h.id === guest.hostelId) : null;
+                      const status = paymentStatus(p);
                       const statusStyles: Record<string, string> = {
                         paid: 'bg-emerald-100 text-emerald-700',
                         pending: 'bg-amber-100 text-amber-700',
@@ -418,10 +420,10 @@ export default function SmsPage() {
                           <td className="px-4 py-3 font-semibold text-gray-900">{p.amount.toLocaleString()} zl</td>
                           <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{p.dueDate}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[p.status]}`}>{statusLabels[p.status]}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[status]}`}>{statusLabels[status]}</span>
                           </td>
                           <td className="px-4 py-3">
-                            {p.status === 'overdue' ? (
+                            {status === 'overdue' ? (
                               <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
                                 {Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24))} дн.
                               </span>
