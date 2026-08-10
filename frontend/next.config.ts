@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/api/:path*', destination: `${API_TARGET}/api/:path*` },
       { source: '/uploads/:path*', destination: `${API_TARGET}/uploads/:path*` },
     ];
   },
