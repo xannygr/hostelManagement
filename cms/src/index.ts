@@ -1,6 +1,5 @@
 import type { Core } from '@strapi/strapi';
-import { randomBytes } from 'node:crypto';
-import { readFileSync, mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -142,27 +141,58 @@ async function seedPermissions(strapi: Core.Strapi) {
   }
 }
 
+// Пароль по умолчанию совпадает с подсказкой на странице входа фронтенда
+// и с креденшелами в tests/helpers.js. В проде задайте ADMIN_PASSWORD.
+const DEFAULT_ADMIN_PASSWORD = 'admin123';
+
 async function ensureDefaultAdmin(strapi: Core.Strapi) {
-  const count = await strapi.db.query('plugin::users-permissions.user').count();
-  if (count > 0) return;
-
+  const userService = strapi.plugin('users-permissions').service('user');
   const role = await ensureRole(strapi, ADMIN_ROLE);
-  const password = process.env.ADMIN_PASSWORD || randomBytes(12).toString('base64url');
+  const desiredPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
 
-  await strapi.plugin('users-permissions').service('user').add({
-    username: 'admin',
-    email: ADMIN_EMAIL,
-    password,
-    provider: 'local',
-    confirmed: true,
-    blocked: false,
-    role: role.id,
+  const existing = await strapi.db.query('plugin::users-permissions.user').findOne({
+    where: { email: ADMIN_EMAIL },
   });
+
+  if (!existing) {
+    await userService.add({
+      username: 'admin',
+      email: ADMIN_EMAIL,
+      password: desiredPassword,
+      provider: 'local',
+      confirmed: true,
+      blocked: false,
+      role: role.id,
+    });
+    strapi.log.warn(
+      `[seed] created default dashboard user ${ADMIN_EMAIL} / ${desiredPassword}. ` +
+        (process.env.ADMIN_PASSWORD
+          ? 'For safety, set a strong ADMIN_PASSWORD on first deploy.'
+          : 'Set the ADMIN_PASSWORD env var to change the default password.'),
+    );
+    return;
+  }
+
+  if (existing.role !== role.id) {
+    await strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: existing.id },
+      data: { role: role.id },
+    });
+    strapi.log.info(`[seed] ${ADMIN_EMAIL} assigned to role "${ADMIN_ROLE.name}"`);
+  }
+
+  try {
+    const matches = await userService.validatePassword(desiredPassword, existing.password);
+    if (matches) return;
+  } catch {
+    strapi.log.warn(`[seed] unreadable password hash for ${ADMIN_EMAIL}; resetting it`);
+  }
+
+  await userService.edit(existing.id, { password: desiredPassword });
   strapi.log.warn(
-    `[seed] created default dashboard user ${ADMIN_EMAIL} / ${password}. ` +
-      (process.env.ADMIN_PASSWORD
-        ? 'For safety, set a strong ADMIN_PASSWORD on first deploy.'
-        : 'Retrieve the password from the logs or set ADMIN_PASSWORD before first boot.'),
+    `[seed] reset dashboard user ${ADMIN_EMAIL} password to ` +
+      (process.env.ADMIN_PASSWORD ? 'the ADMIN_PASSWORD value' : `"${DEFAULT_ADMIN_PASSWORD}"`) +
+      '. Control it via the ADMIN_PASSWORD env var.',
   );
 }
 
@@ -176,6 +206,44 @@ function healthMiddleware(strapi: Core.Strapi) {
       return;
     }
     await next();
+  });
+}
+
+// Strapi 5 has a known bug (dual-package hazard with @strapi/utils) where
+// ApplicationError/ValidationError are not recognised via `instanceof` and get
+// serialised as a generic 500 instead of their proper 4xx status. This is
+// registered last (innermost), so it catches thrown errors before the stock
+// `strapi::errors` middleware and normalises them by `error.name`.
+const STATUS_BY_NAME: Record<string, number> = {
+  YupValidationError: 400,
+  ValidationError: 400,
+  ApplicationError: 400,
+  UnauthorizedError: 401,
+  ForbiddenError: 403,
+  PolicyError: 403,
+  NotFoundError: 404,
+  PayloadTooLargeError: 413,
+  RateLimitError: 429,
+  NotImplementedError: 501,
+};
+
+function errorNormalizerMiddleware(strapi: Core.Strapi) {
+  strapi.server.use(async (ctx, next) => {
+    try {
+      await next();
+    } catch (error) {
+      const err = error as Error & { status?: number; details?: unknown };
+      const status = STATUS_BY_NAME[err.name] ?? err.status;
+      if (status && err.message) {
+        ctx.status = status;
+        ctx.body = {
+          data: null,
+          error: { status, name: err.name, message: err.message, details: err.details ?? {} },
+        };
+        return;
+      }
+      throw error;
+    }
   });
 }
 
@@ -283,6 +351,7 @@ export default {
 
   bootstrap({ strapi }: { strapi: Core.Strapi }) {
     healthMiddleware(strapi);
+    errorNormalizerMiddleware(strapi);
     return (async () => {
       await seedPermissions(strapi);
       await ensureDefaultAdmin(strapi);

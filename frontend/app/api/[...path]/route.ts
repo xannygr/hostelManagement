@@ -25,7 +25,12 @@ async function proxy(req: NextRequest, path: string[]) {
       headers,
       ...(body !== undefined ? { body } : {}),
     });
-    return new Response(res.body, { status: res.status });
+    const responseHeaders = new Headers();
+    for (const name of ['content-type', 'content-disposition', 'cache-control', 'etag']) {
+      const value = res.headers.get(name);
+      if (value) responseHeaders.set(name, value);
+    }
+    return new Response(res.body, { status: res.status, headers: responseHeaders });
   } catch (err) {
     console.warn(`[proxy] API ${target} недоступен:`, (err as { code?: string })?.code || (err as Error).message);
     return new Response(

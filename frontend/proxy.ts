@@ -20,7 +20,19 @@ const SECURITY_HEADERS: Record<string, string> = {
   ].join('; '),
 };
 
-export function proxy(_req: NextRequest) {
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // /api и /uploads проксируются на Strapi: передаём реальный IP клиента,
+  // чтобы rate-limit работал по IP, а не по одному IP прокси.
+  if (pathname.startsWith('/api/') || pathname.startsWith('/uploads/')) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    if (!ip) return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-forwarded-for', ip);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   const res = NextResponse.next();
   Object.entries(SECURITY_HEADERS).forEach(([name, value]) => {
     res.headers.set(name, value);
@@ -29,5 +41,5 @@ export function proxy(_req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|uploads|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

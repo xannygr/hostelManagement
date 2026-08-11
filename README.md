@@ -87,7 +87,7 @@ Strapi при первом старте сам создаёт БД-схему, �
    | --- | --- | --- |
    | `DATABASE_CLIENT` | `postgres` | да |
    | `DATABASE_URL` | `${{ Postgres.DATABASE_URL }}` | да (ставится автоматически при link) |
-   | `ADMIN_PASSWORD` | ваш пароль для `admin@hostel.com` | нет, генерируется |
+   | `ADMIN_PASSWORD` | ваш пароль для `admin@hostel.com` | нет, по умолчанию `admin123` |
    | `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` | свои значения | нет, генерируются |
 
    Если секреты не заданы — entrypoint сгенерирует случайные при каждом старте
@@ -116,8 +116,15 @@ Strapi при первом старте сам создаёт БД-схему, �
 ### 4. Вход в приложение
 
 - Дашборд: `https://<frontend>.up.railway.app` — вход `admin@hostel.com` +
-  пароль из `ADMIN_PASSWORD` (или из логов деплоя, если не задавали).
+  пароль из `ADMIN_PASSWORD`. Если `ADMIN_PASSWORD` не задан — пароль `admin123`
+  (сид при каждом старте приводит пароль админа к этому значению).
 - CMS-панель: `https://<cms>.up.railway.app/admin`.
+
+> Пароль `admin@hostel.com` синхронизируется сидом: если текущий пароль не
+> совпадает с `ADMIN_PASSWORD` (или с `admin123`, когда переменная не задана),
+> он сбрасывается при следующем старте. Если вы сменили пароль в настройках
+> приложения — он вернётся к `ADMIN_PASSWORD`/`admin123` после рестарта.
+> Задайте `ADMIN_PASSWORD`, чтобы зафиксировать свой пароль.
 
 ### Нюансы
 
@@ -128,7 +135,7 @@ Strapi при первом старте сам создаёт БД-схему, �
     `APP_PROXY=true` Strapi доверяет `x-forwarded-for` любому источнику, и
     rate limit обходится подменой заголовка.
   - Rate limit работает по реальному IP клиента за счёт
-    `frontend/src/middleware.ts` (прокидывает `x-forwarded-for`) +
+    `frontend/proxy.ts` (прокидывает `x-forwarded-for`) +
     `server.proxy.koa`. Без этого Strapi видел бы одно IP прокси.
   - Store лимита в памяти (`koa2-ratelimit`) — на один инстанс. При
     масштабировании CMS на несколько инстансов нужен общий store (например Redis).
@@ -174,6 +181,9 @@ React Query (`DataContext`) с пагинацией по всем страниц
   CSP в report-only. Пути `/api` и `/uploads` проксируются на Strapi без изменений.
 - Strapi медиа-политики: только image/video/audio/pdf/office/text/csv,
   исполняемые типы (`exe`, `shell`, `mach-binary`) запрещены.
+- Ошибки Strapi нормализуются по имени (`ValidationError` → 400 и т.д.)
+  в `cms/src/index.ts` — защита от известного бага Strapi 5, когда ошибки
+  приложения маскируются под generic `500 Internal Server Error`.
 
 ## Проверка
 
