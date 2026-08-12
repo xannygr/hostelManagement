@@ -18,14 +18,14 @@ async function downloadPhoto(url: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
-async function uploadPhotos(strapi: Core.Strapi, urls: string[]): Promise<number[]> {
+async function uploadPhotos(strapi: Core.Strapi, urls: string[], prefix = 'room'): Promise<number[]> {
   const fileIds: number[] = [];
   const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'hostelhaven-photos-'));
   try {
     for (const url of urls) {
       const buf = await downloadPhoto(url);
       const ext = path.extname(new URL(url).pathname).split('?')[0] || '.jpg';
-      const filename = `room-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext || '.jpg'}`;
+      const filename = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext || '.jpg'}`;
       const filepath = path.join(tmpDir, filename);
       writeFileSync(filepath, buf);
       const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
@@ -254,9 +254,9 @@ async function seed(strapi: Core.Strapi) {
   const hostelIds: Record<string, number> = {};
   const roomIds: Record<string, number> = {};
   const guestIdByMockId = new Map<string, number>();
-  const photoCache = new Map<string, number[]>();
+const photoCache = new Map<string, number[]>();
 
-  const roomPhotos = async (urls: string[] | undefined) => {
+  const fetchPhotoIds = async (urls: string[] | undefined) => {
     if (!urls || urls.length === 0) return [];
     const ids: number[] = [];
     for (const url of urls) {
@@ -274,6 +274,7 @@ async function seed(strapi: Core.Strapi) {
   };
 
   for (const h of hostels) {
+    const [imageId] = h.image ? await fetchPhotoIds([h.image]) : [];
     const created = await strapi.documents('api::hostel.hostel').create({
       data: {
         name: h.name,
@@ -283,6 +284,7 @@ async function seed(strapi: Core.Strapi) {
         parking: h.parking,
         showers: h.showers,
         toilets: h.toilets,
+        image: imageId,
       },
       status: 'published',
     });
@@ -290,7 +292,7 @@ async function seed(strapi: Core.Strapi) {
   }
 
   for (const r of rooms) {
-    const photoIds = await roomPhotos(r.photos);
+    const photoIds = await fetchPhotoIds(r.photos);
     const created = await strapi.documents('api::room.room').create({
       data: {
         number: r.number,
@@ -346,6 +348,49 @@ async function seed(strapi: Core.Strapi) {
   strapi.log.info('[seed] demo data imported from mock.json');
 }
 
+// Дозаполняет image у хостелов, созданных до того, как в mock появились фото.
+// Запускается на каждом старте (дешёво): только хостелы без изображения.
+async function seedHostelImages(strapi: Core.Strapi) {
+  const { hostels } = mockData();
+  const imageByHostelName = new Map<string, string>();
+  for (const h of hostels) {
+    if (h.image) imageByHostelName.set(h.name, h.image);
+  }
+  if (imageByHostelName.size === 0) return;
+
+  const existing = await strapi.db.query('api::hostel.hostel').findMany({
+    select: ['id', 'name'],
+    populate: { image: true },
+  });
+  const missing = existing.filter(
+    (h: { image?: unknown; name: string }) => !h.image && imageByHostelName.has(h.name),
+  );
+
+  if (missing.length === 0) return;
+  strapi.log.info(`[seed] attaching missing photos to ${missing.length} hostel(s)`);
+
+  const photoCache = new Map<string, number[]>();
+  for (const h of missing) {
+    const url = imageByHostelName.get(h.name)!;
+    if (!photoCache.has(url)) {
+      try {
+        photoCache.set(url, await uploadPhotos(strapi, [url], 'hostel'));
+      } catch (err) {
+        strapi.log.warn(`[seed] photo skip ${url}: ${(err as Error).message}`);
+        photoCache.set(url, []);
+      }
+    }
+    const [imageId] = photoCache.get(url) ?? [];
+    if (imageId) {
+      await strapi.db.query('api::hostel.hostel').update({
+        where: { id: h.id },
+        data: { image: imageId },
+      });
+      strapi.log.info(`[seed] photo attached to hostel "${h.name}"`);
+    }
+  }
+}
+
 export default {
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
 
@@ -356,6 +401,7 @@ export default {
       await seedPermissions(strapi);
       await ensureDefaultAdmin(strapi);
       await seed(strapi);
+      await seedHostelImages(strapi);
     })();
   },
 };

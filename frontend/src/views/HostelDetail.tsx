@@ -60,9 +60,13 @@ export default function HostelDetail() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-              <DoorOpen size={28} />
-            </div>
+            {hostel.image ? (
+              <img src={hostel.image} alt={hostel.name} className="w-14 h-14 rounded-2xl object-cover shrink-0" />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <DoorOpen size={28} />
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{hostel.name}</h1>
               <p className="text-gray-400 mt-0.5">{hostel.address}</p>
