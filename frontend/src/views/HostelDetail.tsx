@@ -159,7 +159,7 @@ export default function HostelDetail() {
             </>
           )}
           {activeTab === 'residents' && <>
-            <TabActions search={searchQuery} onSearch={setSearchQuery} />
+            <TabActions search={searchQuery} onSearch={setSearchQuery} onAdd={() => setShowAddGuest(true)} />
             <ResidentFilterBar paymentFilter={residentPaymentFilter} onPaymentFilter={setResidentPaymentFilter} />
             <ResidentsList guests={activeGuests} search={searchQuery} paymentFilter={residentPaymentFilter} />
           </>}
