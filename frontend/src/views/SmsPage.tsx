@@ -208,7 +208,7 @@ export default function SmsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <ArrowLeft size={16} />
         Вернуться на главную
@@ -263,7 +263,7 @@ export default function SmsPage() {
                 const editValue = editingTemplates[rule.id] ?? rule.template;
                 return (
                 <div key={rule.id} className={`${rule.enabled ? '' : 'opacity-50'}`}>
-                  <div className="flex items-center gap-4 p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${rule.bgColor} ${rule.color}`}>
                       {rule.icon}
                     </div>
@@ -374,7 +374,55 @@ export default function SmsPage() {
                 <p className="text-xs text-gray-300 mt-1">Сообщения появятся здесь после отправки</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="block lg:hidden space-y-2 px-4 pb-4">
+                {smsSentPayments.map(p => {
+                  const guest = guests.find(g => g.id === p.guestId);
+                  const room = rooms.find(r => r.id === p.roomId);
+                  const hostel = guest ? hostels.find(h => h.id === guest.hostelId) : null;
+                  const status = paymentStatus(p);
+                  const statusStyles: Record<string, string> = { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', overdue: 'bg-red-100 text-red-700' };
+                  const statusLabels: Record<string, string> = { paid: 'Оплачено', pending: 'Ожидает', overdue: 'Просрочено' };
+                  return (
+                    <div key={p.id} className="bg-white rounded-xl border border-gray-100 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs shrink-0">
+                          {p.guestName.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 truncate">{p.guestName}</p>
+                          <p className="text-xs text-gray-400 truncate">{hostel?.name} · Ном. {room?.number}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${statusStyles[status]}`}>{statusLabels[status]}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                        <div>
+                          <p className="font-semibold text-gray-900">{p.amount.toLocaleString()} zl</p>
+                          <p className="text-xs text-gray-400">Срок {p.dueDate}{status === 'overdue' ? ` · просрочка ${Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24))} дн.` : ''}</p>
+                        </div>
+                        <div className="ml-auto">
+                          {resentIds.has(p.id) ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium">
+                              <Send size={12} /> Отправлено
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => openSmsPreview(p)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                              title={p.smsSent ? "Отправить повторно" : "Отправить SMS"}
+                            >
+                              {p.smsSent ? <RotateCcw size={12} /> : <Send size={12} />}
+                              {p.smsSent ? 'Повторить' : 'Отправить'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 text-left">
@@ -454,6 +502,7 @@ export default function SmsPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </div>
         </div>

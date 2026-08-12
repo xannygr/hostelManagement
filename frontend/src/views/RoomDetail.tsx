@@ -57,7 +57,7 @@ export default function RoomDetail() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <Link href={`/hostel/${room.hostelId}`} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <ArrowLeft size={16} />
         Powrot do {hostel?.name}
@@ -112,9 +112,9 @@ export default function RoomDetail() {
         )}
 
         <div className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-2xl font-bold text-gray-900">Pokoj {room.number}</h1>
                 <span className={`px-3 py-1 rounded-lg text-sm font-medium ${typeStyles[room.type]}`}>{typeLabels[room.type]}</span>
                 {room.hasBalcony && (
@@ -130,7 +130,7 @@ export default function RoomDetail() {
               </div>
               <p className="text-gray-400">{hostel?.name} · Pietro {room.floor}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               {actualOccupied < room.beds && (
                 <button onClick={() => setShowAddGuest(true)} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors">
                   <UserPlus size={15} />

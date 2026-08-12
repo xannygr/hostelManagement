@@ -1,17 +1,10 @@
 import type { NextConfig } from 'next';
 
-const API_TARGET = process.env.API_TARGET || 'http://localhost:1337';
-
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   turbopack: {
     root: process.cwd(),
-  },
-  async rewrites() {
-    return [
-      { source: '/uploads/:path*', destination: `${API_TARGET}/uploads/:path*` },
-    ];
   },
   async headers() {
     const securityHeaders = [

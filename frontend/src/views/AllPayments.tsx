@@ -38,7 +38,7 @@ export default function AllPayments() {
 
   return (
     <>
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Платежи</h1>
         <p className="text-gray-500 mt-1">Все платежи в хостелах</p>
@@ -104,9 +104,63 @@ export default function AllPayments() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="space-y-2">
+        <div className="block lg:hidden space-y-2">
+          {filtered.map(payment => {
+            const guest = guests.find(g => g.id === payment.guestId);
+            const status = paymentStatus(payment);
+            return (
+              <div key={payment.id} className="bg-white rounded-xl border border-gray-100 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Link href={`/guest/${payment.guestId}`} className="font-medium text-gray-900 hover:text-indigo-600 transition-colors truncate">
+                        {payment.guestName}
+                      </Link>
+                      {guest && (
+                        <a href={`tel:${guest.phone.replace(/\s/g, '')}`} className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center shrink-0 transition-colors" title={`Позвонить: ${guest.phone}`}>
+                          <Phone size={13} />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">Ном. {rooms.find(r => r.id === payment.roomId)?.number} · {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Срок {payment.dueDate}{payment.paidDate ? ` · оплачено ${payment.paidDate}` : ''}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold text-gray-900">{payment.amount.toLocaleString()} zl</p>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${status === 'paid' ? 'bg-emerald-100 text-emerald-700' : status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                      {status === 'paid' ? 'Оплачено' : status === 'pending' ? 'Ожидает' : 'Просрочено'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3">
+                  {payment.smsSent && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                      <Send size={9} /> SMS
+                    </span>
+                  )}
+                  {(status === 'overdue' || status === 'pending') && (
+                    <button
+                      onClick={() => setSmsPreview({
+                        text: getSmsText(payment, guest),
+                        guestName: payment.guestName,
+                        guestPhone: guest?.phone || '',
+                        paymentId: payment.id,
+                      })}
+                      className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      <Send size={12} /> SMS
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left">
               <th className="px-6 py-3 font-medium text-gray-400">Гость</th>
@@ -188,6 +242,7 @@ export default function AllPayments() {
           </tbody>
         </table>
         </div>
+      </div>
       </div>
     </div>
 

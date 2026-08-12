@@ -87,7 +87,7 @@ export default function GuestDetail() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <Link href={`/hostel/${guest.hostelId}`} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <ArrowLeft size={16} />
         Вернуться в {hostel?.name}

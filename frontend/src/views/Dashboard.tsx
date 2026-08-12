@@ -133,7 +133,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Главная</h1>
@@ -167,7 +167,53 @@ export default function Dashboard() {
               { label: 'SMS отправлено', color: 'bg-blue-400' },
             ]}
           />
-          <div className="overflow-x-hidden">
+          <div className="block lg:hidden space-y-2">
+            {Object.values(unpaidByGuest).sort((a, b) => b.totalAmount - a.totalAmount).map(entry => {
+              const guestPayments = allUnpaidPayments.filter(p => p.guestId === entry.guestId);
+              const oldestDue = guestPayments.reduce((min, p) => p.dueDate < min ? p.dueDate : min, guestPayments[0].dueDate);
+              const overdueDays = Math.max(0, Math.ceil((new Date().getTime() - new Date(oldestDue).getTime()) / (1000 * 60 * 60 * 24)));
+              return (
+                <div key={entry.guestId} className="bg-white rounded-xl border border-gray-100 p-4">
+                  <Link href={`/guest/${entry.guestId}`} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-semibold text-xs shrink-0">
+                      {entry.guestName.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 truncate">{entry.guestName}</p>
+                      <p className="text-xs text-gray-400 truncate">{hostels.find(h => h.id === entry.hostelId)?.name || '—'} · {entry.count} плат.</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-red-500">{entry.totalAmount.toLocaleString()} зл</p>
+                      {entry.hasOverdue ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${overdueDays > 14 ? 'bg-red-100 text-red-700' : overdueDays > 7 ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
+                          Просрочка {overdueDays} дн.
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 whitespace-nowrap">Ожидает</span>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2 mt-3">
+                    {entry.smsSent && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded whitespace-nowrap">
+                        <Send size={9} /> SMS
+                      </span>
+                    )}
+                    <div className="flex gap-2 ml-auto">
+                      <button onClick={() => openSmsPreview(entry)} className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors">
+                        <MessageSquare size={12} /> SMS
+                      </button>
+                      <a href={`tel:${guests.find(g => g.id === entry.guestId)?.phone?.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors">
+                        <Phone size={12} /> Позвонить
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
@@ -237,7 +283,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-8 px-8 py-3 mb-6 -mt-2 border-b border-gray-100">
+      <div className="lg:sticky lg:top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 mb-6 -mt-2 border-b border-gray-100">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           <div className="flex items-center gap-2">
             <Building2 size={16} className="text-gray-400" />

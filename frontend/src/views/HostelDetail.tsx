@@ -51,7 +51,7 @@ export default function HostelDetail() {
   const occupancy = hostel.totalBeds > 0 ? Math.round((computedOccupiedBeds / hostel.totalBeds) * 100) : 0;
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <        ArrowLeft size={16} />
         Назад к списку
@@ -123,7 +123,7 @@ export default function HostelDetail() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex flex-wrap border-b border-gray-100">
+        <div className="flex overflow-x-auto border-b border-gray-100">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -988,6 +988,57 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
 
   return (
     <>
+    <div className="block lg:hidden space-y-2 px-4 pb-4">
+      {filtered.map((payment: any) => {
+        const guest = guests.find((g: any) => g.id === payment.guestId);
+        return (
+          <div key={payment.id} className="bg-white rounded-xl border border-gray-100 p-4">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <Link href={`/guest/${payment.guestId}`} className="font-medium text-gray-900 hover:text-indigo-600 transition-colors truncate">
+                    {payment.guestName}
+                  </Link>
+                  {guest && (
+                    <a href={`tel:${guest.phone.replace(/\s/g, '')}`} className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center shrink-0 transition-colors" title={`Позвонить: ${guest.phone}`}>
+                      <Phone size={13} />
+                    </a>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">Ном. {rooms.find((r: any) => r.id === payment.roomId)?.number} · {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Срок {payment.dueDate}{payment.paidDate ? ` · оплачено ${payment.paidDate}` : ''}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-semibold text-gray-900">{payment.amount.toLocaleString()} зл</p>
+                <PaymentStatus status={payment.status} />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              {payment.smsSent && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                  <Send size={9} /> SMS
+                </span>
+              )}
+              {(payment.status === 'overdue' || payment.status === 'pending') && guest && (
+                <button
+                  onClick={() => setSmsPreview({
+                    text: getSmsText(payment, guest),
+                    guestName: payment.guestName,
+                    guestPhone: guest?.phone || '',
+                    paymentId: payment.id,
+                  })}
+                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                >
+                  <Send size={12} /> SMS
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <div className="hidden lg:block">
     <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
       <colgroup>
         <col style={{ width: '26%' }} />
@@ -1064,6 +1115,7 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
         })}
       </tbody>
     </table>
+    </div>
 
     <Modal isOpen={!!smsPreview} onClose={() => setSmsPreview(null)} title="Отправка SMS">
       {smsPreview && (
