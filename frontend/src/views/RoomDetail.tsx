@@ -74,10 +74,10 @@ export default function RoomDetail() {
 
             {photos.length > 1 && (
               <>
-                <button onClick={prevPhoto} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60">
+                <button onClick={prevPhoto} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity hover:bg-black/60">
                   <ChevronLeft size={20} />
                 </button>
-                <button onClick={nextPhoto} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60">
+                <button onClick={nextPhoto} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity hover:bg-black/60">
                   <ChevronRight size={20} />
                 </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 rounded-full px-3 py-1.5">
@@ -88,7 +88,7 @@ export default function RoomDetail() {
               </>
             )}
 
-            <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-3 right-3 flex gap-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
               <button onClick={() => setFullscreen(true)} className="w-9 h-9 rounded-lg bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors" title="Pelny ekran">
                 <Maximize2 size={16} />
               </button>

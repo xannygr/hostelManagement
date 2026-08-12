@@ -30,7 +30,7 @@ export default function Login() {
           <p className="text-white/60 mt-1 text-sm">Управление хостелами</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email или имя пользователя</label>

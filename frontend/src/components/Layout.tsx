@@ -96,7 +96,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main className="lg:ml-64 min-w-0 overflow-x-hidden pb-16 lg:pb-0">
+      <main className="lg:ml-64 min-w-0 overflow-x-hidden pb-8 lg:pb-0">
         {children}
       </main>
     </div>

@@ -176,9 +176,9 @@ function HostelsTab() {
               <div key={h.id} className="border border-gray-200 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setExpandedHostel(isOpen ? null : h.id)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 flex-wrap p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
                       <Building2 size={18} />
                     </div>
