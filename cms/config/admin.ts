@@ -1,19 +1,26 @@
+import crypto from 'node:crypto';
 import type { Core } from '@strapi/strapi';
+
+// Railway не передаёт секреты (entrypoint.sh может не выполняться), поэтому
+// генерируем фолбэки в коде — как это делал entrypoint. Реальные значения
+// задаются переменными Railway, когда они нужны (стабильные сессии/токены).
+const sec = (env: Core.Config.Shared.ConfigParams['env'], key: string): string =>
+  env(key, crypto.randomBytes(16).toString('base64'));
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Admin => ({
   auth: {
-    secret: env('ADMIN_JWT_SECRET')!,
+    secret: sec(env, 'ADMIN_JWT_SECRET'),
   },
   apiToken: {
-    salt: env('API_TOKEN_SALT')!,
+    salt: sec(env, 'API_TOKEN_SALT'),
   },
   transfer: {
     token: {
-      salt: env('TRANSFER_TOKEN_SALT')!,
+      salt: sec(env, 'TRANSFER_TOKEN_SALT'),
     },
   },
   secrets: {
-    encryptionKey: env('ENCRYPTION_KEY')!,
+    encryptionKey: sec(env, 'ENCRYPTION_KEY'),
   },
   flags: {
     nps: env.bool('FLAG_NPS', true),

@@ -22,10 +22,12 @@ const deniedExecutableTypes = [
   'application/x-mach-binary',
 ];
 
+import crypto from 'node:crypto';
+
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
   'users-permissions': {
     config: {
-      jwtSecret: env('JWT_SECRET'),
+      jwtSecret: env('JWT_SECRET', crypto.randomBytes(16).toString('base64')),
       jwt: {
         expiresIn: '7d',
       },

@@ -11,11 +11,20 @@ const mockData = () => {
 const CONTENT_TYPES = ['api::hostel.hostel', 'api::room.room', 'api::guest.guest', 'api::payment.payment'];
 
 async function downloadPhoto(url: string): Promise<Buffer> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (HostelHaven Seed)' },
-  });
-  if (!res.ok) throw new Error(`download failed ${res.status} for ${url}`);
-  return Buffer.from(await res.arrayBuffer());
+  // Без таймаута зависший fetch (сеть от Railway до Unsplash) заблокировал бы
+  // bootstrap, и сервер не успел бы пройти healthcheck на деплое.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (HostelHaven Seed)' },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`download failed ${res.status} for ${url}`);
+    return Buffer.from(await res.arrayBuffer());
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function uploadPhotos(strapi: Core.Strapi, urls: string[], prefix = 'room'): Promise<number[]> {
@@ -439,6 +448,20 @@ async function healMissingMedia(strapi: Core.Strapi) {
   strapi.log.info(`[media] media check finished in ${Date.now() - started}ms`);
 }
 
+// Ждём хилер не дольше порога: если сеть до стоков фото медленная, сервер
+// всё равно должен подняться и пройти healthcheck, а дозагрузка продолжится
+// в фоне (ошибки уже отловлены внутри healMissingMedia).
+async function runMediaHeal(strapi: Core.Strapi): Promise<void> {
+  const MEDIA_HEAL_TIMEOUT_MS = 90_000;
+  const heal = healMissingMedia(strapi).catch((err) =>
+    strapi.log.warn(`[media] heal error: ${(err as Error).message}`),
+  );
+  await Promise.race([
+    heal,
+    new Promise((resolve) => setTimeout(() => resolve, MEDIA_HEAL_TIMEOUT_MS)),
+  ]);
+}
+
 export default {
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
 
@@ -449,7 +472,7 @@ export default {
       await seedPermissions(strapi);
       await ensureDefaultAdmin(strapi);
       await seed(strapi);
-      await healMissingMedia(strapi);
+      await runMediaHeal(strapi);
     })();
   },
 };
