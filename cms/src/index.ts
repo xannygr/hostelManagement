@@ -1,5 +1,5 @@
 import type { Core } from '@strapi/strapi';
-import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -254,7 +254,7 @@ async function seed(strapi: Core.Strapi) {
   const hostelIds: Record<string, number> = {};
   const roomIds: Record<string, number> = {};
   const guestIdByMockId = new Map<string, number>();
-const photoCache = new Map<string, number[]>();
+  const photoCache = new Map<string, number[]>();
 
   const fetchPhotoIds = async (urls: string[] | undefined) => {
     if (!urls || urls.length === 0) return [];
@@ -348,47 +348,95 @@ const photoCache = new Map<string, number[]>();
   strapi.log.info('[seed] demo data imported from mock.json');
 }
 
-// Дозаполняет image у хостелов, созданных до того, как в mock появились фото.
-// Запускается на каждом старте (дешёво): только хостелы без изображения.
-async function seedHostelImages(strapi: Core.Strapi) {
-  const { hostels } = mockData();
-  const imageByHostelName = new Map<string, string>();
-  for (const h of hostels) {
-    if (h.image) imageByHostelName.set(h.name, h.image);
-  }
-  if (imageByHostelName.size === 0) return;
+// «Самолечение» медиа. На Railway файлы в /app/public/uploads не переживают
+// рестарт контейнера (эфемерный диск), хотя записи в БД остаются. На каждом
+// старте проверяем наличие файлов на диске и перезаливаем недостающие из
+// mock.json — и для комнат, и для хостелов. Идемпотентно: если файлы на месте,
+// ничего не делает.
+type MediaUpload = { url?: string };
+type HostelRow = { id: number; name: string; image?: MediaUpload | null };
+type RoomRow = { id: number; number: string; hostel?: { name?: string } | null; photos?: MediaUpload[] | null };
 
-  const existing = await strapi.db.query('api::hostel.hostel').findMany({
-    select: ['id', 'name'],
-    populate: { image: true },
-  });
-  const missing = existing.filter(
-    (h: { image?: unknown; name: string }) => !h.image && imageByHostelName.has(h.name),
+function uploadsFilePath(url?: string): string {
+  return path.join(process.cwd(), 'public', (url || '').replace(/^\//, ''));
+}
+
+async function healMissingMedia(strapi: Core.Strapi) {
+  const { rooms, hostels } = mockData();
+  const hostelNameById = new Map<string, string>(
+    hostels.map((h: { id: string; name: string }) => [h.id, h.name]),
   );
 
-  if (missing.length === 0) return;
-  strapi.log.info(`[seed] attaching missing photos to ${missing.length} hostel(s)`);
-
-  const photoCache = new Map<string, number[]>();
-  for (const h of missing) {
-    const url = imageByHostelName.get(h.name)!;
-    if (!photoCache.has(url)) {
+  const fileExists = (u?: MediaUpload | null) => Boolean(u?.url && existsSync(uploadsFilePath(u.url)));
+  const urlCache = new Map<string, number[]>();
+  const ensureIds = async (url?: string) => {
+    if (!url) return [];
+    if (!urlCache.has(url)) {
       try {
-        photoCache.set(url, await uploadPhotos(strapi, [url], 'hostel'));
+        urlCache.set(url, await uploadPhotos(strapi, [url]));
       } catch (err) {
-        strapi.log.warn(`[seed] photo skip ${url}: ${(err as Error).message}`);
-        photoCache.set(url, []);
+        strapi.log.warn(`[media] photo skip ${url}: ${(err as Error).message}`);
+        urlCache.set(url, []);
       }
     }
-    const [imageId] = photoCache.get(url) ?? [];
-    if (imageId) {
-      await strapi.db.query('api::hostel.hostel').update({
-        where: { id: h.id },
-        data: { image: imageId },
-      });
-      strapi.log.info(`[seed] photo attached to hostel "${h.name}"`);
+    return urlCache.get(url) ?? [];
+  };
+
+  const healHostels = async () => {
+    const dbHostels = (await strapi.db.query('api::hostel.hostel').findMany({
+      populate: { image: true },
+    })) as HostelRow[];
+    for (const h of dbHostels) {
+      const mock = hostels.find((m: { name: string }) => m.name === h.name);
+      if (!mock?.image || fileExists(h.image)) continue;
+      try {
+        const [imageId] = await ensureIds(mock.image);
+        if (imageId) {
+          await strapi.db.query('api::hostel.hostel').update({
+            where: { id: h.id },
+            data: { image: imageId },
+          });
+          strapi.log.info(`[media] hostel "${h.name}" image restored`);
+        }
+      } catch (err) {
+        strapi.log.warn(`[media] hostel "${h.name}" image skip: ${(err as Error).message}`);
+      }
     }
-  }
+  };
+
+  const healRooms = async () => {
+    const dbRooms = (await strapi.db.query('api::room.room').findMany({
+      populate: { photos: true, hostel: true },
+    })) as RoomRow[];
+    for (const r of dbRooms) {
+      const mock = rooms.find(
+        (m: { hostelId: string; number: string }) =>
+          m.number === r.number && hostelNameById.get(m.hostelId) === r.hostel?.name,
+      );
+      if (!mock?.photos?.length) continue;
+      const currentPhotos = r.photos ?? [];
+      if (currentPhotos.length > 0 && currentPhotos.every(fileExists)) continue;
+      try {
+        const ids = (
+          await Promise.all(mock.photos.map((url: string) => ensureIds(url)))
+        ).flat();
+        if (ids.length > 0) {
+          await strapi.db.query('api::room.room').update({
+            where: { id: r.id },
+            data: { photos: ids },
+          });
+          strapi.log.info(`[media] room "${r.hostel?.name ?? '?'} / ${r.number}" restored ${ids.length} photos`);
+        }
+      } catch (err) {
+        strapi.log.warn(`[media] room "${r.number}" photos skip: ${(err as Error).message}`);
+      }
+    }
+  };
+
+  const started = Date.now();
+  await healHostels();
+  await healRooms();
+  strapi.log.info(`[media] media check finished in ${Date.now() - started}ms`);
 }
 
 export default {
@@ -401,7 +449,7 @@ export default {
       await seedPermissions(strapi);
       await ensureDefaultAdmin(strapi);
       await seed(strapi);
-      await seedHostelImages(strapi);
+      await healMissingMedia(strapi);
     })();
   },
 };
