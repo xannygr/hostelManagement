@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Search, Phone, Filter } from 'lucide-react';
+import { Search, Phone, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
-import { guestTotalPaid, guestTotalDue } from '../utils/helpers';
+import { guestTotalPaid, guestTotalDue, roomOccupiedBeds } from '../utils/helpers';
 import Legend from '../components/Legend';
+import Modal from '../components/Modal';
 
 export default function AllGuests() {
   const { guests, rooms, hostels, payments } = useData();
@@ -12,6 +13,7 @@ export default function AllGuests() {
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
+  const [showAddGuest, setShowAddGuest] = useState(false);
 
   const filtered = guests.filter(g => {
     const matchesSearch = g.name.toLowerCase().includes(search.toLowerCase()) || g.phone.includes(search);
@@ -31,6 +33,12 @@ export default function AllGuests() {
           <h1 className="text-2xl font-bold text-gray-900">Все гости</h1>
           <p className="text-gray-500 mt-1">{guests.length} гостей во всех хостелах</p>
         </div>
+        <button
+          onClick={() => setShowAddGuest(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+        >
+          <Plus size={16} /> Добавить гостя
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
@@ -186,6 +194,94 @@ export default function AllGuests() {
           </div>
         </>
       )}
+
+      <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title="Добавить гостя">
+        <AddGuestForm onClose={() => setShowAddGuest(false)} />
+      </Modal>
     </div>
+  );
+}
+
+function AddGuestForm({ onClose }: { onClose: () => void }) {
+  const { hostels, rooms, guests, addGuest } = useData();
+  const [hostelId, setHostelId] = useState(hostels[0]?.id || '');
+  const [roomId, setRoomId] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [passport, setPassport] = useState('');
+  const [checkIn, setCheckIn] = useState(new Date().toISOString().split('T')[0]);
+  const [checkOut, setCheckOut] = useState('');
+
+  const hostelRooms = rooms.filter(r => r.hostelId === hostelId && roomOccupiedBeds(r.id, guests) < r.beds);
+  const activeRoom = roomId && hostelRooms.some(r => r.id === roomId) ? roomId : (hostelRooms[0]?.id || '');
+  const selectedRoom = rooms.find(r => r.id === activeRoom);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone || !hostelId || !activeRoom || !checkIn || !checkOut) return;
+    addGuest({ name, phone, email, passport, roomId: activeRoom, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: 0 });
+    onClose();
+  };
+
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Хостел</label>
+        <select required value={hostelId} onChange={e => { setHostelId(e.target.value); setRoomId(''); }} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          {hostels.map(h => (
+            <option key={h.id} value={h.id}>{h.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Комната</label>
+        <select required value={activeRoom} onChange={e => setRoomId(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          {hostelRooms.map(r => {
+            const occ = roomOccupiedBeds(r.id, guests);
+            return (
+              <option key={r.id} value={r.id}>{r.number} · {r.type} · {r.beds - occ} свободных · {r.pricePerBed} зл/кровать</option>
+            );
+          })}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="jan@email.com" />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+          <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+          <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+      {selectedRoom && checkIn && checkOut && (
+        <p className="text-xs text-gray-400">
+          Итого: {selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)))} зл за период
+        </p>
+      )}
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Добавить</button>
+      </div>
+    </form>
   );
 }
