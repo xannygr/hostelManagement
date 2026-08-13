@@ -6,6 +6,7 @@
   "scripts": {
     "build": "strapi build",
     "console": "strapi console",
+    "mock:generate": "node scripts/generate-mock.mjs",
     "deploy": "strapi deploy",
     "dev": "strapi develop",
     "develop": "strapi develop",
