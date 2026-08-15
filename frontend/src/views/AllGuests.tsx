@@ -20,7 +20,7 @@ export default function AllGuests() {
     const matchesStatus = statusFilter === 'all' || g.status === statusFilter;
     const paid = guestTotalPaid(g.id, payments);
     const due = guestTotalDue(g.id, payments);
-    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : payments.some(p => p.guestId === g.id && p.status !== 'paid'));
+    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'pending' ? payments.some(p => p.guestId === g.id && p.status === 'pending') : payments.some(p => p.guestId === g.id && p.status === 'overdue'));
     const matchesMin = minAmount === '' || paid >= Number(minAmount);
     const matchesMax = maxAmount === '' || paid <= Number(maxAmount);
     return matchesSearch && matchesStatus && matchesPayment && matchesMin && matchesMax;
@@ -72,6 +72,7 @@ export default function AllGuests() {
           {[
             { key: 'all', label: 'Оплата: все' },
             { key: 'paid', label: 'Оплатили' },
+            { key: 'pending', label: 'В ожидании' },
             { key: 'unpaid', label: 'Не оплатили' },
           ].map(f => (
             <button key={f.key} onClick={() => setPaymentFilter(f.key)} className={`px-4 py-2 text-sm font-medium transition-colors ${paymentFilter === f.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
