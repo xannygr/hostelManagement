@@ -729,7 +729,6 @@ function GuestFilterBar({ filter, onFilter, paymentFilter, onPaymentFilter }: { 
           { key: 'all', label: 'Оплата: все' },
           { key: 'paid', label: 'Оплатили' },
           { key: 'unpaid', label: 'Не оплатили' },
-          { key: 'debt', label: 'Должники' },
         ].map(f => (
           <button key={f.key} onClick={() => onPaymentFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${paymentFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -749,7 +748,6 @@ function ResidentFilterBar({ paymentFilter, onPaymentFilter }: { paymentFilter: 
           { key: 'all', label: 'Оплата: все' },
           { key: 'paid', label: 'Оплатили' },
           { key: 'unpaid', label: 'Не оплатили' },
-          { key: 'debt', label: 'Должники' },
         ].map(f => (
           <button key={f.key} onClick={() => onPaymentFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${paymentFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -766,7 +764,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
     const matchesSearch = x.name.toLowerCase().includes(search.toLowerCase()) || x.phone.includes(search);
     const matchesStatus = statusFilter === 'all' || x.status === statusFilter;
     const due = guestTotalDue(x.id, payments);
-    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'unpaid' ? payments.some(p => p.guestId === x.id && p.status !== 'paid') : payments.some(p => p.guestId === x.id && p.status === 'overdue'));
+    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : payments.some(p => p.guestId === x.id && p.status !== 'paid'));
     return matchesSearch && matchesStatus && matchesPayment;
   });
   if (filtered.length === 0) return <EmptyState text="Гости не найдены" />;
@@ -895,7 +893,7 @@ function ResidentsList({ guests: g, search, paymentFilter }: { guests: any[]; se
   const filtered = g.filter(x => {
     const matchesSearch = x.name.toLowerCase().includes(search.toLowerCase());
     const due = guestTotalDue(x.id, payments);
-    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'unpaid' ? payments.some(p => p.guestId === x.id && p.status !== 'paid') : payments.some(p => p.guestId === x.id && p.status === 'overdue'));
+    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : payments.some(p => p.guestId === x.id && p.status !== 'paid'));
     return matchesSearch && matchesPayment;
   });
   if (filtered.length === 0) return <EmptyState text="Нет жильцов" />;

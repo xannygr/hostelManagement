@@ -123,7 +123,7 @@ export default function AllPayments() {
                         </a>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">Ном. {rooms.find(r => r.id === payment.roomId)?.number} · {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{hostels.find(h => h.id === guest?.hostelId)?.name} · Ном. {rooms.find(r => r.id === payment.roomId)?.number} · {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Срок {payment.dueDate}{payment.paidDate ? ` · оплачено ${payment.paidDate}` : ''}</p>
                   </div>
                   <div className="text-right shrink-0">
@@ -164,7 +164,7 @@ export default function AllPayments() {
           <thead>
             <tr className="bg-gray-50 text-left">
               <th className="px-6 py-3 font-medium text-gray-400">Гость</th>
-              <th className="px-6 py-3 font-medium text-gray-400">Номер</th>
+              <th className="px-6 py-3 font-medium text-gray-400">Хостел / Номер</th>
               <th className="px-6 py-3 font-medium text-gray-400">Сумма</th>
               <th className="px-6 py-3 font-medium text-gray-400">Срок</th>
               <th className="px-6 py-3 font-medium text-gray-400">Оплачено</th>
@@ -214,7 +214,7 @@ export default function AllPayments() {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-500">{rooms.find(r => r.id === payment.roomId)?.number}</td>
+                <td className="px-6 py-4 text-gray-500">{hostels.find(h => h.id === guest?.hostelId)?.name} · Ном. {rooms.find(r => r.id === payment.roomId)?.number}</td>
                 <td className="px-6 py-4 font-semibold text-gray-900">{payment.amount.toLocaleString()} zl</td>
                 <td className="px-6 py-4 text-gray-500 text-xs">{payment.dueDate}</td>
                 <td className="px-6 py-4 text-gray-400 text-xs">{payment.paidDate || '-'}</td>
