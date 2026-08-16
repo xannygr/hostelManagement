@@ -9,12 +9,13 @@ import {
 import { useData } from '../context/DataContext';
 import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue } from '../utils/helpers';
 import Modal from '../components/Modal';
+import type { Room } from '../types';
 
 type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' | 'analytics';
 
 export default function HostelDetail() {
   const { id } = useParams<{ id: string }>();
-  const { hostels, rooms, guests, payments, updateHostel } = useData();
+  const { hostels, rooms, guests, payments, updateHostel, addRoom } = useData();
   const hostel = hostels.find(h => h.id === id);
   const [activeTab, setActiveTab] = useState<Tab>('map');
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +23,18 @@ export default function HostelDetail() {
   const [showEditHostel, setShowEditHostel] = useState(false);
   const [editName, setEditName] = useState('');
   const [editAddress, setEditAddress] = useState('');
+  const [editFloors, setEditFloors] = useState<number | undefined>();
+  const [editKitchens, setEditKitchens] = useState<number | undefined>();
+  const [editParking, setEditParking] = useState('');
+  const [editShowers, setEditShowers] = useState<number | undefined>();
+  const [editToilets, setEditToilets] = useState<number | undefined>();
+  const [newRoomNumber, setNewRoomNumber] = useState('');
+  const [newRoomFloor, setNewRoomFloor] = useState(1);
+  const [newRoomBeds, setNewRoomBeds] = useState(2);
+  const [newRoomType, setNewRoomType] = useState<Room['type']>('standard');
+  const [newRoomPrice, setNewRoomPrice] = useState(85);
+  const [newRoomBalcony, setNewRoomBalcony] = useState(false);
+  const [newRoomBathroom, setNewRoomBathroom] = useState(false);
   const [guestStatusFilter, setGuestStatusFilter] = useState<string>('all');
   const [guestPaymentFilter, setGuestPaymentFilter] = useState<string>('all');
   const [residentPaymentFilter, setResidentPaymentFilter] = useState<string>('all');
@@ -101,7 +114,7 @@ export default function HostelDetail() {
               )}
             </div>
           </div>
-          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
             <            Edit3 size={16} />
             Редактировать
           </button>
@@ -127,7 +140,7 @@ export default function HostelDetail() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex overflow-x-auto border-b border-gray-100">
+        <div className="flex flex-wrap border-b border-gray-100">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -186,7 +199,31 @@ export default function HostelDetail() {
       </Modal>
 
       <Modal isOpen={showEditHostel} onClose={() => setShowEditHostel(false)} title="Редактировать хостел">
-        <form className="space-y-4" onSubmit={e => { e.preventDefault(); updateHostel(hostel.id, { name: editName, address: editAddress }); setShowEditHostel(false); }}>
+        <form className="space-y-4" onSubmit={e => {
+          e.preventDefault();
+          updateHostel(hostel.id, {
+            name: editName,
+            address: editAddress,
+            floors: editFloors,
+            kitchens: editKitchens,
+            parking: editParking,
+            showers: editShowers,
+            toilets: editToilets,
+          });
+          if (newRoomNumber.trim()) {
+            addRoom({
+              number: newRoomNumber.trim(),
+              floor: newRoomFloor,
+              beds: newRoomBeds,
+              type: newRoomType,
+              pricePerBed: newRoomPrice,
+              hostelId: hostel.id,
+              hasBalcony: newRoomBalcony,
+              hasPrivateBathroom: newRoomBathroom,
+            });
+          }
+          setShowEditHostel(false);
+        }}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Название хостела</label>
             <input required type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -195,6 +232,73 @@ export default function HostelDetail() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Адрес</label>
             <input required type="text" value={editAddress} onChange={e => setEditAddress(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
+
+          <div className="border-t border-gray-100 pt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Условия</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Этажей</label>
+                <input type="number" min={1} value={editFloors ?? ''} onChange={e => setEditFloors(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Кухонь</label>
+                <input type="number" min={0} value={editKitchens ?? ''} onChange={e => setEditKitchens(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Парковка</label>
+                <input type="text" value={editParking} onChange={e => setEditParking(e.target.value)} placeholder="напр. на 10 машин" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Душ</label>
+                <input type="number" min={0} value={editShowers ?? ''} onChange={e => setEditShowers(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Туалеты</label>
+                <input type="number" min={0} value={editToilets ?? ''} onChange={e => setEditToilets(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Новый номер</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Номер *</label>
+                <input type="text" value={newRoomNumber} onChange={e => setNewRoomNumber(e.target.value)} placeholder="напр. 101" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Этаж</label>
+                <input type="number" min={1} value={newRoomFloor} onChange={e => setNewRoomFloor(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Кровати</label>
+                <input type="number" min={1} value={newRoomBeds} onChange={e => setNewRoomBeds(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Цена за кровать / сутки (zl)</label>
+                <input type="number" min={0} value={newRoomPrice} onChange={e => setNewRoomPrice(Math.max(0, parseInt(e.target.value) || 0))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Тип</label>
+                <select value={newRoomType} onChange={e => setNewRoomType(e.target.value as Room['type'])} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="economy">Эконом</option>
+                  <option value="standard">Стандарт</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-5 mt-3">
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" checked={newRoomBalcony} onChange={e => setNewRoomBalcony(e.target.checked)} className="w-4 h-4 rounded accent-indigo-600" />
+                Балкон
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" checked={newRoomBathroom} onChange={e => setNewRoomBathroom(e.target.checked)} className="w-4 h-4 rounded accent-indigo-600" />
+                Свой санузел
+              </label>
+            </div>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => setShowEditHostel(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
             <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Сохранить</button>

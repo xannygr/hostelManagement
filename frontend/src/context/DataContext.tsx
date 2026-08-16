@@ -26,6 +26,7 @@ interface DataContextType {
   updateRoomPrices: (hostelId: string, type: Room['type'], price: number) => void;
   updateHostel: (id: string, data: Partial<Hostel>) => void;
   updateRoom: (id: string, data: Partial<Room>) => void;
+  addRoom: (room: Omit<Room, 'id' | 'occupiedBeds'>) => void;
   updatePayment: (id: string, data: Partial<Payment>) => void;
 }
 
@@ -156,6 +157,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .catch((e) => fail(e, 'Не удалось обновить номер'));
   };
 
+  const addRoom = (room: Omit<Room, 'id' | 'occupiedBeds'>) => {
+    api.addRoom(room)
+      .then(() => { invalidateAll(); notify('success', 'Номер создан'); })
+      .catch((e) => fail(e, 'Не удалось создать номер'));
+  };
+
   const updatePayment = (id: string, data: Partial<Payment>) => {
     api.updatePayment(id, data)
       .then(() => invalidateAll())
@@ -186,6 +193,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateRoomPrices,
         updateHostel,
         updateRoom,
+        addRoom,
         updatePayment,
       }}
     >

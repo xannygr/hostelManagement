@@ -344,13 +344,51 @@ export const api = {
       return { hostel, rooms: created };
     }),
 
-  updateHostel: (id: string, data: Partial<Hostel>): Promise<Hostel> =>
-    request<{ data: RawHostel }>(`/hostels/${id}`, {
+  updateHostel: (id: string, data: Partial<Hostel>): Promise<Hostel> => {
+    const payload: Record<string, unknown> = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.address !== undefined) payload.address = data.address;
+    if (data.floors !== undefined) payload.floors = data.floors;
+    if (data.kitchens !== undefined) payload.kitchens = data.kitchens;
+    if (data.parking !== undefined) payload.parking = data.parking;
+    if (data.showers !== undefined) payload.showers = data.showers;
+    if (data.toilets !== undefined) payload.toilets = data.toilets;
+    return request<{ data: RawHostel }>(`/hostels/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ data: { name: data.name, address: data.address } }),
+      body: JSON.stringify({ data: payload }),
     }).then(({ data: h }) =>
       normalizeHostel(h, [], [], [])
-    ),
+    );
+  },
+
+  addRoom: (room: Omit<Room, 'id' | 'occupiedBeds'>): Promise<Room> =>
+    request<{ data: RawRoom }>('/rooms', {
+      method: 'POST',
+      body: JSON.stringify({
+        data: {
+          number: room.number,
+          floor: room.floor,
+          beds: room.beds,
+          type: room.type,
+          pricePerBed: room.pricePerBed,
+          hasBalcony: room.hasBalcony ?? false,
+          hasPrivateBathroom: room.hasPrivateBathroom ?? false,
+          hostel: { connect: [room.hostelId] },
+        },
+      }),
+    }).then(({ data: r }) => ({
+      id: r.documentId,
+      hostelId: r.hostel?.documentId ?? room.hostelId,
+      number: r.number,
+      floor: r.floor,
+      beds: r.beds,
+      occupiedBeds: 0,
+      type: r.type,
+      pricePerBed: r.pricePerBed,
+      hasBalcony: r.hasBalcony ?? false,
+      hasPrivateBathroom: r.hasPrivateBathroom ?? false,
+      photos: r.photos?.map((ph) => ph.url),
+    })),
 
   addGuest: (guest: Omit<Guest, 'id'> & { id?: string }): Promise<Guest> =>
     request<{ data: RawGuest }>('/guests', {
@@ -498,6 +536,8 @@ export const api = {
     if (data.beds !== undefined) payload.beds = data.beds;
     if (data.type !== undefined) payload.type = data.type;
     if (data.pricePerBed !== undefined) payload.pricePerBed = data.pricePerBed;
+    if (data.hasBalcony !== undefined) payload.hasBalcony = data.hasBalcony;
+    if (data.hasPrivateBathroom !== undefined) payload.hasPrivateBathroom = data.hasPrivateBathroom;
     return request<{ data: RawRoom }>(`/rooms/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ data: payload }),
@@ -510,6 +550,9 @@ export const api = {
       occupiedBeds: 0,
       type: r.type,
       pricePerBed: r.pricePerBed,
+      hasBalcony: r.hasBalcony ?? false,
+      hasPrivateBathroom: r.hasPrivateBathroom ?? false,
+      photos: r.photos?.map((ph) => ph.url),
     }));
   },
 
