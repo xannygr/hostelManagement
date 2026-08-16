@@ -131,12 +131,10 @@ export default function RoomDetail() {
               <p className="text-gray-400">{hostel?.name} · Pietro {room.floor}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 shrink-0">
-              {actualOccupied < room.beds && (
-                <button onClick={() => setShowAddGuest(true)} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors">
+              <button onClick={() => setShowAddGuest(true)} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors">
                   <UserPlus size={15} />
                   Dodaj goscia
                 </button>
-              )}
               <button onClick={() => setShowEdit(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors">
                 <Edit3 size={15} />
                 Edytuj

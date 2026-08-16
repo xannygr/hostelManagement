@@ -425,15 +425,13 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                         <span className="text-gray-500 font-medium">{actualOccupied}/{room.beds} мест</span>
                         <span className="text-gray-400">{room.pricePerBed} зл</span>
                       </div>
-                      {!isFull && (
-                        <button
+                      <button
                           type="button"
                           onClick={e => { e.preventDefault(); e.stopPropagation(); setAddGuestRoom(room); }}
                           className="mt-2 w-full py-1.5 rounded-lg border border-dashed border-emerald-300 text-emerald-600 text-[11px] font-medium hover:bg-emerald-50 transition-colors inline-flex items-center justify-center gap-1"
                         >
                           <UserPlus size={12} /> Добавить гостя
                         </button>
-                      )}
                       </div>
                       {(todayCheckin.length > 0 || todayCheckout.length > 0) && (
                         <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-md border border-gray-100 p-1">
