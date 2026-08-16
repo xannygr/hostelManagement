@@ -52,13 +52,13 @@ export default function HostelDetail() {
   const computedOccupiedBeds = hostelOccupiedBeds(hostel.id, guests);
 
   const tabs: { key: Tab; label: string; count?: number; icon: React.ReactNode }[] = [
-    { key: 'map', label: 'Карта комнат', icon: <LayoutGrid size={16} /> },
-    { key: 'schedule', label: 'Расписание', icon: <Clock size={16} /> },
-    { key: 'residents', label: 'Жильцы', count: activeGuests.length, icon: <Users size={16} /> },
-    { key: 'debtors', label: 'Должники', count: debtors.length, icon: <AlertTriangle size={16} /> },
-    { key: 'guests', label: 'Все гости', count: hostelGuests.length, icon: <Users size={16} /> },
-    { key: 'payments', label: 'Платежи', count: hostelPayments.length, icon: <DollarSign size={16} /> },
-    { key: 'analytics', label: 'Аналитика', icon: <BarChart3 size={16} /> },
+    { key: 'map', label: 'Карта комнат', icon: <LayoutGrid size={14} /> },
+    { key: 'schedule', label: 'Расписание', icon: <Clock size={14} /> },
+    { key: 'residents', label: 'Жильцы', count: activeGuests.length, icon: <Users size={14} /> },
+    { key: 'debtors', label: 'Должники', count: debtors.length, icon: <AlertTriangle size={14} /> },
+    { key: 'guests', label: 'Все гости', count: hostelGuests.length, icon: <Users size={14} /> },
+    { key: 'payments', label: 'Платежи', count: hostelPayments.length, icon: <DollarSign size={14} /> },
+    { key: 'analytics', label: 'Аналитика', icon: <BarChart3 size={14} /> },
   ];
 
   const occupancy = hostel.totalBeds > 0 ? Math.round((computedOccupiedBeds / hostel.totalBeds) * 100) : 0;
@@ -140,19 +140,19 @@ export default function HostelDetail() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex flex-wrap border-b border-gray-100">
+        <div className="flex flex-nowrap overflow-x-auto border-b border-gray-100">
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-5 py-4 text-sm font-medium transition-all relative whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-3 text-xs font-medium transition-all relative whitespace-nowrap shrink-0 ${
                 activeTab === tab.key ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {tab.icon}
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
+                <span className={`ml-0.5 px-1.5 py-0.5 text-[10px] rounded-full ${activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
                   {tab.count}
                 </span>
               )}
