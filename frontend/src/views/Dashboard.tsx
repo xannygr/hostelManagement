@@ -14,7 +14,8 @@ export default function Dashboard() {
   const [hostelFilter, setHostelFilter] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
-  const [monthsCount, setMonthsCount] = useState<number>(12);
+  const [earningsMonthsCount, setEarningsMonthsCount] = useState<number>(12);
+  const [occMonthsCount, setOccMonthsCount] = useState<number>(12);
   const [smsPreview, setSmsPreview] = useState<{ text: string; guestId: string; guestName: string; paymentIds: string[] } | null>(null);
   const [hoverEarnings, setHoverEarnings] = useState<string | null>(null);
   const [hoverOcc, setHoverOcc] = useState<string | null>(null);
@@ -303,16 +304,6 @@ export default function Dashboard() {
               Сбросить
             </button>
           )}
-          <div className="flex items-center gap-2 ml-auto">
-            <BarChart3 size={16} className="text-gray-400" />
-            <select value={monthsCount} onChange={e => setMonthsCount(Number(e.target.value))} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value={3}>3 мес.</option>
-              <option value={6}>6 мес.</option>
-              <option value={12}>12 мес.</option>
-              <option value={24}>24 мес.</option>
-              <option value={999}>Все</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -325,18 +316,19 @@ export default function Dashboard() {
         });
         filteredGuests.forEach(g => { allMonths.add(g.checkIn.substring(0, 7)); allMonths.add(g.checkOut.substring(0, 7)); });
         const rawMonths = [...allMonths].filter(m => m <= currentMonth).sort();
-        const sortedMonths: string[] = [];
+        const fullMonths: string[] = [];
         if (rawMonths.length > 0) {
           const [sy, sm] = rawMonths[0].split('-').map(Number);
           const [ey, em] = rawMonths[rawMonths.length - 1].split('-').map(Number);
           let y = sy, m = sm;
           while (y < ey || (y === ey && m <= em)) {
-            sortedMonths.push(`${y}-${String(m).padStart(2, '0')}`);
+            fullMonths.push(`${y}-${String(m).padStart(2, '0')}`);
             m++;
             if (m > 12) { m = 1; y++; }
           }
         }
-        sortedMonths.splice(0, Math.max(0, sortedMonths.length - monthsCount));
+        const earningsMonths = fullMonths.slice(Math.max(0, fullMonths.length - earningsMonthsCount));
+        const occMonths = fullMonths.slice(Math.max(0, fullMonths.length - occMonthsCount));
 
         const earningsByMonth: Record<string, { paid: number; pending: number; overdue: number; total: number }> = {};
         filteredPayments.forEach(p => {
@@ -347,7 +339,7 @@ export default function Dashboard() {
         });
 
         const occByMonth: Record<string, { guestNights: number; avgPct: number; checkins: number; checkouts: number; guests: number }> = {};
-        sortedMonths.forEach(m => {
+        fullMonths.forEach(m => {
           const [y, mo] = m.split('-').map(Number);
           const daysInMonth = new Date(y, mo, 0).getDate();
           const totalBeds = filteredRooms.reduce((s, r) => s + r.beds, 0);
@@ -376,21 +368,22 @@ export default function Dashboard() {
         });
 
         const monthShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-        const maxEarnings = Math.max(...sortedMonths.map(m => earningsByMonth[m]?.total || 0), 1);
+        const maxEarnings = Math.max(...earningsMonths.map(m => earningsByMonth[m]?.total || 0), 1);
         const statPaid = filteredPayments.filter(p => paymentStatus(p) === 'paid').reduce((s, p) => s + p.amount, 0);
         const statPending = filteredPayments.filter(p => paymentStatus(p) === 'pending').reduce((s, p) => s + p.amount, 0);
         const statOverdue = filteredPayments.filter(p => paymentStatus(p) === 'overdue').reduce((s, p) => s + p.amount, 0);
         const statTotal = statPaid + statPending + statOverdue;
-        const statAvg = sortedMonths.length ? Math.round(statTotal / sortedMonths.length) : 0;
-        const maxOccNights = Math.max(...sortedMonths.map(m => occByMonth[m]?.guestNights || 0), 1);
+        const statAvg = earningsMonths.length ? Math.round(statTotal / earningsMonths.length) : 0;
+        const maxOccNights = Math.max(...occMonths.map(m => occByMonth[m]?.guestNights || 0), 1);
 
-        if (sortedMonths.length === 0) return null;
+        if (fullMonths.length === 0) return null;
 
         const chartLeft = 55;
         const chartBottom = 240;
         const chartH = 200;
         const barGap = 80;
-        const svgW = sortedMonths.length * barGap + chartLeft + 20;
+        const svgEarningsW = earningsMonths.length * barGap + chartLeft + 20;
+        const svgOccW = occMonths.length * barGap + chartLeft + 20;
 
         return (
           <div className="mb-8 space-y-6">
@@ -398,7 +391,16 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign size={16} className="text-emerald-500" />
                 <h3 className="font-semibold text-gray-900 text-sm">Доходы по месяцам</h3>
-                <span className="ml-auto text-xs text-gray-400">{sortedMonths.length} мес.</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <select value={earningsMonthsCount} onChange={e => setEarningsMonthsCount(Number(e.target.value))} className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value={3}>3 мес.</option>
+                    <option value={6}>6 мес.</option>
+                    <option value={12}>12 мес.</option>
+                    <option value={24}>24 мес.</option>
+                    <option value={999}>Все</option>
+                  </select>
+                  <span className="text-xs text-gray-400">{earningsMonths.length} мес.</span>
+                </div>
               </div>
               <Legend
                 className="mb-3"
@@ -409,8 +411,8 @@ export default function Dashboard() {
                 ]}
               />
               <div className="overflow-x-auto -mx-5 px-5">
-                <div style={{ minWidth: Math.max(svgW, 360) }}>
-                  <svg viewBox={`0 0 ${svgW} 310`} className="w-full" style={{ height: 310 }} preserveAspectRatio="xMidYMid meet">
+                <div style={{ minWidth: Math.max(svgEarningsW, 360) }}>
+                  <svg viewBox={`0 0 ${svgEarningsW} 310`} className="w-full" style={{ height: 310 }} preserveAspectRatio="xMidYMid meet">
                     {(() => {
                       const rows: React.ReactNode[] = [];
                       const ticks = 4;
@@ -419,13 +421,13 @@ export default function Dashboard() {
                         const y = chartBottom - (t / ticks) * chartH;
                         rows.push(
                           <g key={`yt-${t}`}>
-                            <line x1={chartLeft - 5} y1={y} x2={chartLeft + sortedMonths.length * barGap} y2={y} stroke="#f3f4f6" strokeWidth={1} />
+                            <line x1={chartLeft - 5} y1={y} x2={chartLeft + earningsMonths.length * barGap} y2={y} stroke="#f3f4f6" strokeWidth={1} />
                             <text x={chartLeft - 8} y={y + 3} textAnchor="end" className="fill-gray-400" style={{ fontSize: 10 }}>{val >= 1000 ? `${(val / 1000).toFixed(val >= 10000 ? 0 : 1)}k` : val}</text>
                           </g>
                         );
                       }
                       const monthShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-                      sortedMonths.forEach((m, i) => {
+                      earningsMonths.forEach((m, i) => {
                         const e = earningsByMonth[m] || { paid: 0, pending: 0, overdue: 0, total: 0 };
                         const [yr, mo] = m.split('-');
                         const cx = chartLeft + i * barGap + barGap / 2;
@@ -446,9 +448,9 @@ export default function Dashboard() {
                           </g>
                         );
                       });
-                      rows.push(<line key="bl" x1={chartLeft} y1={chartBottom} x2={chartLeft + sortedMonths.length * barGap} y2={chartBottom} stroke="#e5e7eb" strokeWidth={1} />);
-                      if (hoverEarnings && sortedMonths.includes(hoverEarnings)) {
-                        const mi = sortedMonths.indexOf(hoverEarnings);
+                      rows.push(<line key="bl" x1={chartLeft} y1={chartBottom} x2={chartLeft + earningsMonths.length * barGap} y2={chartBottom} stroke="#e5e7eb" strokeWidth={1} />);
+                      if (hoverEarnings && earningsMonths.includes(hoverEarnings)) {
+                        const mi = earningsMonths.indexOf(hoverEarnings);
                         const e = earningsByMonth[hoverEarnings] || { paid: 0, pending: 0, overdue: 0, total: 0 };
                         const [yr, mo] = hoverEarnings.split('-');
                         const cx = chartLeft + mi * barGap + barGap / 2;
@@ -459,7 +461,7 @@ export default function Dashboard() {
                         const monthLabel = `${monthShort[parseInt(mo) - 1]} ${yr}`;
                         const ttW = 170;
                         const ttH = e.paid > 0 && e.pending > 0 && e.overdue > 0 ? 72 : e.total === 0 ? 26 : 56;
-                        const chartRight = chartLeft + sortedMonths.length * barGap;
+                        const chartRight = chartLeft + earningsMonths.length * barGap;
                         const ttX = Math.min(Math.max(cx - ttW / 2, chartLeft), chartRight - ttW);
                         const ttCx = ttX + ttW / 2;
                         const ttY = Math.max(2, chartBottom - totH - ttH);
@@ -506,6 +508,16 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={16} className="text-indigo-500" />
                 <h3 className="font-semibold text-gray-900 text-sm">Размещение по месяцам</h3>
+                <div className="ml-auto flex items-center gap-2">
+                  <select value={occMonthsCount} onChange={e => setOccMonthsCount(Number(e.target.value))} className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value={3}>3 мес.</option>
+                    <option value={6}>6 мес.</option>
+                    <option value={12}>12 мес.</option>
+                    <option value={24}>24 мес.</option>
+                    <option value={999}>Все</option>
+                  </select>
+                  <span className="text-xs text-gray-400">{occMonths.length} мес.</span>
+                </div>
               </div>
               <Legend
                 className="mb-3"
@@ -515,8 +527,8 @@ export default function Dashboard() {
                 ]}
               />
               <div className="overflow-x-auto -mx-5 px-5">
-                <div style={{ minWidth: Math.max(svgW, 360) }}>
-                  <svg viewBox={`0 0 ${svgW} 310`} className="w-full" style={{ height: 310 }} preserveAspectRatio="xMidYMid meet">
+                <div style={{ minWidth: Math.max(svgOccW, 360) }}>
+                  <svg viewBox={`0 0 ${svgOccW} 310`} className="w-full" style={{ height: 310 }} preserveAspectRatio="xMidYMid meet">
                     {(() => {
                       const rows: React.ReactNode[] = [];
                       const ticks = 4;
@@ -525,12 +537,12 @@ export default function Dashboard() {
                         const y = chartBottom - (t / ticks) * chartH;
                         rows.push(
                           <g key={`yt-${t}`}>
-                            <line x1={chartLeft - 5} y1={y} x2={chartLeft + sortedMonths.length * barGap} y2={y} stroke="#f3f4f6" strokeWidth={1} />
+                            <line x1={chartLeft - 5} y1={y} x2={chartLeft + occMonths.length * barGap} y2={y} stroke="#f3f4f6" strokeWidth={1} />
                             <text x={chartLeft - 8} y={y + 3} textAnchor="end" className="fill-gray-400" style={{ fontSize: 10 }}>{val}</text>
                           </g>
                         );
                       }
-                      sortedMonths.forEach((m, i) => {
+                      occMonths.forEach((m, i) => {
                         const o = occByMonth[m] || { guestNights: 0, avgPct: 0, checkins: 0, checkouts: 0, guests: 0 };
                         const [yr, mo] = m.split('-');
                         const cx = chartLeft + i * barGap + barGap / 2;
@@ -543,7 +555,7 @@ export default function Dashboard() {
                             <rect x={cx - bw / 2 - 8} y={chartBottom - chartH} width={bw + 16} height={chartH} fill="transparent" />
                             <rect x={cx - bw / 2} y={chartBottom - nH} width={bw} height={nH} rx={3} fill={color} className="transition-opacity group-hover:opacity-80" />
                             {i > 0 && (() => {
-                              const prev = occByMonth[sortedMonths[i - 1]] || { avgPct: 0 };
+                              const prev = occByMonth[occMonths[i - 1]] || { avgPct: 0 };
                               const prevY = chartBottom - (prev.avgPct / 100) * chartH;
                               return <line key={`ol-${m}`} x1={chartLeft + (i - 1) * barGap + barGap / 2} y1={prevY} x2={cx} y2={occY} stroke="#ef4444" strokeWidth={2} strokeDasharray="4 2" />;
                             })()}
@@ -553,9 +565,9 @@ export default function Dashboard() {
                           </g>
                         );
                       });
-                      rows.push(<line key="bl" x1={chartLeft} y1={chartBottom} x2={chartLeft + sortedMonths.length * barGap} y2={chartBottom} stroke="#e5e7eb" strokeWidth={1} />);
-                      if (hoverOcc && sortedMonths.includes(hoverOcc)) {
-                        const mi = sortedMonths.indexOf(hoverOcc);
+                      rows.push(<line key="bl" x1={chartLeft} y1={chartBottom} x2={chartLeft + occMonths.length * barGap} y2={chartBottom} stroke="#e5e7eb" strokeWidth={1} />);
+                      if (hoverOcc && occMonths.includes(hoverOcc)) {
+                        const mi = occMonths.indexOf(hoverOcc);
                         const o = occByMonth[hoverOcc] || { guestNights: 0, avgPct: 0, checkins: 0, checkouts: 0, guests: 0 };
                         const [yr, mo] = hoverOcc.split('-');
                         const cx = chartLeft + mi * barGap + barGap / 2;
@@ -564,7 +576,7 @@ export default function Dashboard() {
                         const monthLabel = `${monthShort[parseInt(mo) - 1]} ${yr}`;
                         const ttW = 140;
                         const ttH = 72;
-                        const chartRight = chartLeft + sortedMonths.length * barGap;
+                        const chartRight = chartLeft + occMonths.length * barGap;
                         const ttX = Math.min(Math.max(cx - ttW / 2, chartLeft), chartRight - ttW);
                         const ttCx = ttX + ttW / 2;
                         const ttY = Math.max(2, chartBottom - nH - ttH);
@@ -585,11 +597,11 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3 pt-3 border-t border-gray-100">
                 {(() => {
-                  const totalCheckins = sortedMonths.reduce((s, m) => s + (occByMonth[m]?.checkins || 0), 0);
-                  const totalCheckouts = sortedMonths.reduce((s, m) => s + (occByMonth[m]?.checkouts || 0), 0);
-                  const totalGuests = sortedMonths.reduce((s, m) => s + (occByMonth[m]?.guests || 0), 0);
-                  const avgGuests = sortedMonths.length > 0 ? Math.round((totalGuests / sortedMonths.length) * 10) / 10 : 0;
-                  const avgOcc = sortedMonths.length > 0 ? Math.round(sortedMonths.reduce((s, m) => s + (occByMonth[m]?.avgPct || 0), 0) / sortedMonths.length) : 0;
+                  const totalCheckins = occMonths.reduce((s, m) => s + (occByMonth[m]?.checkins || 0), 0);
+                  const totalCheckouts = occMonths.reduce((s, m) => s + (occByMonth[m]?.checkouts || 0), 0);
+                  const totalGuests = occMonths.reduce((s, m) => s + (occByMonth[m]?.guests || 0), 0);
+                  const avgGuests = occMonths.length > 0 ? Math.round((totalGuests / occMonths.length) * 10) / 10 : 0;
+                  const avgOcc = occMonths.length > 0 ? Math.round(occMonths.reduce((s, m) => s + (occByMonth[m]?.avgPct || 0), 0) / occMonths.length) : 0;
                   return (
                     <>
                        <div className="text-center"><p className="text-xs text-gray-400">Среднее кол-во гостей</p><p className="font-bold text-gray-900">{avgGuests}<span className="text-[10px] text-gray-400 font-normal">/мес</span></p></div>
