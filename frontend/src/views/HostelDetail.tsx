@@ -9,6 +9,7 @@ import {
 import { useData } from '../context/DataContext';
 import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue } from '../utils/helpers';
 import Modal from '../components/Modal';
+import RoomDatePicker from '../components/RoomDatePicker';
 import type { Room } from '../types';
 
 type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' | 'analytics';
@@ -311,7 +312,7 @@ export default function HostelDetail() {
 
 function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: any[]; guests: any[]; roomTypeFilter: string; setRoomTypeFilter: (v: string) => void }) {
   const [now, setNow] = useState(new Date());
-  const [addGuestRoom, setAddGuestRoom] = useState<{ id: string; number: string; hostelId: string; pricePerBed: number } | null>(null);
+  const [addGuestRoom, setAddGuestRoom] = useState<{ id: string; number: string; hostelId: string; beds: number; pricePerBed: number } | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -457,8 +458,9 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
   );
 }
 
-function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: string; hostelId: string; pricePerBed: number }; onClose: () => void }) {
-  const { addGuestWithPayment } = useData();
+function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: string; hostelId: string; beds: number; pricePerBed: number }; onClose: () => void }) {
+  const { addGuestWithPayment, guests } = useData();
+  const todayStr = new Date().toISOString().split('T')[0];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -523,15 +525,20 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
-          <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
-          <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+        <RoomDatePicker
+          roomId={room.id}
+          beds={room.beds}
+          guests={guests}
+          value={checkIn}
+          onChange={setCheckIn}
+          minDate={todayStr}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+        <input required type="date" min={checkIn || undefined} value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       {nights > 0 && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">

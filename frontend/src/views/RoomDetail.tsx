@@ -5,6 +5,7 @@ import { ArrowLeft, Users, BedDouble, DollarSign, Edit3, Calendar, ChevronLeft, 
 import { useData } from '../context/DataContext';
 import { roomOccupiedBeds } from '../utils/helpers';
 import Modal from '../components/Modal';
+import RoomDatePicker from '../components/RoomDatePicker';
 
 export default function RoomDetail() {
   const { id } = useParams<{ id: string }>();
@@ -307,10 +308,11 @@ export default function RoomDetail() {
 }
 
 function AddGuestRoomForm({ room, onClose }: {
-  room: { id: string; number: string; hostelId: string; pricePerBed: number };
+  room: { id: string; number: string; hostelId: string; beds: number; pricePerBed: number };
   onClose: () => void;
 }) {
-  const { addGuestWithPayment } = useData();
+  const { addGuestWithPayment, guests } = useData();
+  const todayStr = new Date().toISOString().split('T')[0];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -376,15 +378,20 @@ function AddGuestRoomForm({ room, onClose }: {
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Paszport / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Zameldowanie</label>
-          <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Wymeldowanie</label>
-          <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Zameldowanie</label>
+        <RoomDatePicker
+          roomId={room.id}
+          beds={room.beds}
+          guests={guests}
+          value={checkIn}
+          onChange={setCheckIn}
+          minDate={todayStr}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Wymeldowanie</label>
+        <input required type="date" min={checkIn || undefined} value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       {nights > 0 && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
