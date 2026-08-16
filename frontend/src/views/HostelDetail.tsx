@@ -311,6 +311,7 @@ export default function HostelDetail() {
 
 function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: any[]; guests: any[]; roomTypeFilter: string; setRoomTypeFilter: (v: string) => void }) {
   const [now, setNow] = useState(new Date());
+  const [addGuestRoom, setAddGuestRoom] = useState<{ id: string; number: string; hostelId: string; pricePerBed: number } | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -424,6 +425,15 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                         <span className="text-gray-500 font-medium">{actualOccupied}/{room.beds} мест</span>
                         <span className="text-gray-400">{room.pricePerBed} зл</span>
                       </div>
+                      {!isFull && (
+                        <button
+                          type="button"
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setAddGuestRoom(room); }}
+                          className="mt-2 w-full py-1.5 rounded-lg border border-dashed border-emerald-300 text-emerald-600 text-[11px] font-medium hover:bg-emerald-50 transition-colors inline-flex items-center justify-center gap-1"
+                        >
+                          <UserPlus size={12} /> Добавить гостя
+                        </button>
+                      )}
                       </div>
                       {(todayCheckin.length > 0 || todayCheckout.length > 0) && (
                         <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-md border border-gray-100 p-1">
@@ -439,7 +449,105 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
           );
         })}
       </div>
+
+      {addGuestRoom && (
+        <Modal isOpen={!!addGuestRoom} onClose={() => setAddGuestRoom(null)} title={`Добавить гостя — Номер ${addGuestRoom.number}`}>
+          <RoomAddGuestForm room={addGuestRoom} onClose={() => setAddGuestRoom(null)} />
+        </Modal>
+      )}
     </div>
+  );
+}
+
+function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: string; hostelId: string; pricePerBed: number }; onClose: () => void }) {
+  const { addGuestWithPayment } = useData();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [passport, setPassport] = useState('');
+  const [checkIn, setCheckIn] = useState(new Date().toISOString().split('T')[0]);
+  const [checkOut, setCheckOut] = useState('');
+
+  const nights = checkIn && checkOut ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) : 0;
+  const totalCost = nights * room.pricePerBed;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone || !checkIn || !checkOut) return;
+    try {
+      await addGuestWithPayment(
+        {
+          name,
+          phone,
+          email,
+          passport,
+          roomId: room.id,
+          hostelId: room.hostelId,
+          checkIn,
+          checkOut,
+          status: 'active',
+          totalPaid: 0,
+          totalDue: totalCost,
+        },
+        {
+          guestName: name,
+          roomId: room.id,
+          amount: totalCost,
+          dueDate: checkIn,
+          type: 'cash',
+          status: 'pending',
+          smsSent: false,
+        }
+      );
+      onClose();
+    } catch (err) {
+      alert('Не удалось сохранить гостя: ' + (err instanceof Error ? err.message : 'ошибка сервера'));
+    }
+  };
+
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="jan@email.com" />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+          <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+          <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+      {nights > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-indigo-600">{room.pricePerBed} зл × {nights} ночей</span>
+            <span className="font-bold text-indigo-700">{totalCost.toLocaleString()} зл</span>
+          </div>
+        </div>
+      )}
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Добавить</button>
+      </div>
+    </form>
   );
 }
 
