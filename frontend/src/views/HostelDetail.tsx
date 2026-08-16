@@ -41,9 +41,9 @@ export default function HostelDetail() {
   const tabs: { key: Tab; label: string; count?: number; icon: React.ReactNode }[] = [
     { key: 'map', label: 'Карта комнат', icon: <LayoutGrid size={16} /> },
     { key: 'schedule', label: 'Расписание', icon: <Clock size={16} /> },
-    { key: 'guests', label: 'Гости', count: hostelGuests.length, icon: <Users size={16} /> },
     { key: 'residents', label: 'Жильцы', count: activeGuests.length, icon: <Users size={16} /> },
     { key: 'debtors', label: 'Должники', count: debtors.length, icon: <AlertTriangle size={16} /> },
+    { key: 'guests', label: 'Все гости', count: hostelGuests.length, icon: <Users size={16} /> },
     { key: 'payments', label: 'Платежи', count: hostelPayments.length, icon: <DollarSign size={16} /> },
     { key: 'analytics', label: 'Аналитика', icon: <BarChart3 size={16} /> },
   ];
