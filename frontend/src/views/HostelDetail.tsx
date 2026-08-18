@@ -7,10 +7,10 @@ import {
   ChevronRight, DoorOpen, LayoutGrid, Clock, ArrowDownToLine, ArrowUpFromLine, Send, Filter, BarChart3, Edit3, X, UserPlus
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue } from '../utils/helpers';
+import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 import RoomDatePicker from '../components/RoomDatePicker';
-import type { Room } from '../types';
+import type { GuestLanguage, Room } from '../types';
 
 type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' | 'analytics';
 
@@ -465,6 +465,7 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [passport, setPassport] = useState('');
+  const [language, setLanguage] = useState<GuestLanguage | ''>('');
   const [checkIn, setCheckIn] = useState(new Date().toISOString().split('T')[0]);
   const [checkOut, setCheckOut] = useState('');
 
@@ -481,6 +482,7 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
           phone,
           email,
           passport,
+          language: language || undefined,
           roomId: room.id,
           hostelId: room.hostelId,
           checkIn,
@@ -526,6 +528,15 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Не указан</option>
+          {GUEST_LANGUAGES.map(l => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
         <RoomDatePicker
           roomId={room.id}
@@ -567,6 +578,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
   const [gPhone, setGPhone] = useState('');
   const [gEmail, setGEmail] = useState('');
   const [gPassport, setGPassport] = useState('');
+  const [gLanguage, setGLanguage] = useState<GuestLanguage | ''>('');
   const [gCheckOut, setGCheckOut] = useState('');
   const [gRoomId, setGRoomId] = useState('');
 
@@ -822,7 +834,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
               try {
                 await addGuestWithPayment(
                   {
-                    name: gName, phone: gPhone, email: gEmail, passport: gPassport,
+                    name: gName, phone: gPhone, email: gEmail, passport: gPassport, language: gLanguage || undefined,
                     roomId: gRoomId, hostelId: hostel.id, checkIn: selectedDate, checkOut: gCheckOut,
                     status: 'active', totalPaid: 0, totalDue: totalCost,
                   },
@@ -853,6 +865,15 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Номер паспорта</label>
                 <input type="text" value={gPassport} onChange={e => setGPassport(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="AB1234567" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Язык общения</label>
+                <select value={gLanguage} onChange={e => setGLanguage(e.target.value as GuestLanguage | '')} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                  <option value="">Не указан</option>
+                  {GUEST_LANGUAGES.map(l => (
+                    <option key={l.value} value={l.value}>{l.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Комната *</label>
@@ -1898,6 +1919,7 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [passport, setPassport] = useState('');
+  const [language, setLanguage] = useState<GuestLanguage | ''>('');
   const [roomId, setRoomId] = useState(hostelRooms[0]?.id || '');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -1906,7 +1928,7 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !roomId || !checkIn || !checkOut) return;
-    addGuest({ name, phone, email, passport, roomId, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: selectedRoom ? selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) : 0 });
+    addGuest({ name, phone, email, passport, language: language || undefined, roomId, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: selectedRoom ? selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) : 0 });
     onClose();
   };
 
@@ -1929,6 +1951,15 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Не указан</option>
+          {GUEST_LANGUAGES.map(l => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Комната</label>

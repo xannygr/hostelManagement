@@ -3,9 +3,10 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Users, BedDouble, DollarSign, Edit3, Calendar, ChevronLeft, ChevronRight, X, Maximize2, Minimize2, ImagePlus, UserPlus } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { roomOccupiedBeds } from '../utils/helpers';
+import { roomOccupiedBeds, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 import RoomDatePicker from '../components/RoomDatePicker';
+import type { GuestLanguage } from '../types';
 
 export default function RoomDetail() {
   const { id } = useParams<{ id: string }>();
@@ -317,6 +318,7 @@ function AddGuestRoomForm({ room, onClose }: {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [passport, setPassport] = useState('');
+  const [language, setLanguage] = useState<GuestLanguage | ''>('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
 
@@ -334,6 +336,7 @@ function AddGuestRoomForm({ room, onClose }: {
           phone,
           email,
           passport,
+          language: language || undefined,
           roomId: room.id,
           hostelId: room.hostelId,
           checkIn,
@@ -377,6 +380,15 @@ function AddGuestRoomForm({ room, onClose }: {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Paszport / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Jezyk</label>
+        <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Nie wybrano</option>
+          {GUEST_LANGUAGES.map(l => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Zameldowanie</label>
