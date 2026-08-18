@@ -43,6 +43,19 @@
       ],
       "required": true
     },
+    "language": {
+      "type": "enumeration",
+      "enum": [
+        "ru",
+        "uk",
+        "pl",
+        "en",
+        "de",
+        "es",
+        "fr",
+        "other"
+      ]
+    },
     "hostel": {
       "type": "relation",
       "relation": "manyToOne",

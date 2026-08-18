@@ -1,4 +1,4 @@
-import type { Hostel, Room, Guest, Payment } from './types';
+import type { Guest, GuestLanguage, Hostel, Payment, Room } from './types';
 
 const BASE = '/api';
 const TOKEN_KEY = 'hostelhaven_token';
@@ -81,6 +81,7 @@ interface RawGuest {
   phone: string;
   email: string | null;
   passport: string | null;
+  language?: GuestLanguage | null;
   checkIn: string;
   checkOut: string;
   status: Guest['status'];
@@ -207,6 +208,7 @@ export function normalizeAllData(
       phone: g.phone,
       email: g.email ?? '',
       passport: g.passport ?? '',
+      language: g.language ?? undefined,
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,
@@ -399,6 +401,7 @@ export const api = {
           phone: guest.phone,
           email: guest.email || undefined,
           passport: guest.passport || undefined,
+          language: guest.language || undefined,
           checkIn: guest.checkIn,
           checkOut: guest.checkOut,
           status: guest.status,
@@ -412,6 +415,7 @@ export const api = {
       phone: g.phone,
       email: g.email ?? '',
       passport: g.passport ?? '',
+      language: g.language ?? undefined,
       roomId: g.room?.documentId ?? guest.roomId,
       hostelId: g.hostel?.documentId ?? guest.hostelId,
       checkIn: g.checkIn,
@@ -427,6 +431,7 @@ export const api = {
     if (data.phone !== undefined) payload.phone = data.phone;
     if (data.email !== undefined) payload.email = data.email || undefined;
     if (data.passport !== undefined) payload.passport = data.passport || undefined;
+    if (data.language !== undefined) payload.language = data.language || undefined;
     if (data.checkIn !== undefined) payload.checkIn = data.checkIn;
     if (data.checkOut !== undefined) payload.checkOut = data.checkOut;
     if (data.status !== undefined) payload.status = data.status;
@@ -441,6 +446,7 @@ export const api = {
       phone: g.phone,
       email: g.email ?? '',
       passport: g.passport ?? '',
+      language: g.language ?? undefined,
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,
@@ -458,6 +464,7 @@ export const api = {
       phone: g.phone,
       email: g.email ?? '',
       passport: g.passport ?? '',
+      language: g.language ?? undefined,
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,

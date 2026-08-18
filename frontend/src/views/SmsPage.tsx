@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Bell, ArrowLeft, X, RotateCcw
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { paymentStatus } from '../utils/helpers';
+import { paymentStatus, guestLanguageLabel } from '../utils/helpers';
 
 interface SmsRule {
   id: string;
@@ -521,6 +521,10 @@ export default function SmsPage() {
             <div className="p-5">
               <p className="text-xs text-gray-400 mb-2">
                 Получатель: {smsPreview.payment.guestName} ({guests.find(g => g.id === smsPreview.payment.guestId)?.phone})
+                {(() => {
+                  const lang = guests.find(g => g.id === smsPreview.payment.guestId)?.language;
+                  return lang ? ` · Язык: ${guestLanguageLabel(lang)}` : '';
+                })()}
               </p>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">

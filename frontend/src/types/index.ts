@@ -28,12 +28,15 @@ export interface Room {
   hasPrivateBathroom?: boolean;
 }
 
+export type GuestLanguage = 'ru' | 'uk' | 'pl' | 'en' | 'de' | 'es' | 'fr' | 'other';
+
 export interface Guest {
   id: string;
   name: string;
   phone: string;
   email: string;
   passport: string;
+  language?: GuestLanguage;
   roomId: string;
   hostelId: string;
   checkIn: string;

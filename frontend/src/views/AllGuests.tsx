@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Search, Phone, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
-import { guestTotalPaid, guestTotalDue, roomOccupiedBeds } from '../utils/helpers';
+import type { GuestLanguage } from '../types';
+import { guestTotalPaid, guestTotalDue, roomOccupiedBeds, GUEST_LANGUAGES } from '../utils/helpers';
 import Legend from '../components/Legend';
 import Modal from '../components/Modal';
 
@@ -210,6 +211,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [passport, setPassport] = useState('');
+  const [language, setLanguage] = useState<GuestLanguage | ''>('');
   const [checkIn, setCheckIn] = useState(new Date().toISOString().split('T')[0]);
   const [checkOut, setCheckOut] = useState('');
 
@@ -220,7 +222,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !hostelId || !activeRoom || !checkIn || !checkOut) return;
-    addGuest({ name, phone, email, passport, roomId: activeRoom, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: 0 });
+    addGuest({ name, phone, email, passport, language: language || undefined, roomId: activeRoom, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: 0 });
     onClose();
   };
 
@@ -262,6 +264,15 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Не указан</option>
+          {GUEST_LANGUAGES.map(l => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

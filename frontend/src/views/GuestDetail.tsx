@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Phone, Mail, CreditCard, Calendar, MapPin, Edit3, AlertTriangle, CheckCircle2, Send, MessageSquare, X } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, CreditCard, Calendar, MapPin, Edit3, AlertTriangle, CheckCircle2, Send, MessageSquare, X, Languages } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { guestTotalPaid, guestTotalDue } from '../utils/helpers';
+import type { Guest } from '../types';
+import { guestTotalPaid, guestTotalDue, guestLanguageLabel, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 
 export default function GuestDetail() {
@@ -114,6 +115,7 @@ export default function GuestDetail() {
               <InfoRow icon={<Phone size={18} />} label="Телефон" value={guest.phone || '-'} />
               <InfoRow icon={<Mail size={18} />} label="Email" value={guest.email || '-'} />
               <InfoRow icon={<CreditCard size={18} />} label="Паспорт" value={guest.passport || '-'} />
+              <InfoRow icon={<Languages size={18} />} label="Язык общения" value={guestLanguageLabel(guest.language)} />
             </div>
             <div className="flex gap-3 mt-6">
               {guest.phone ? (
@@ -331,7 +333,7 @@ export default function GuestDetail() {
               </button>
             </div>
             <div className="p-5">
-              <p className="text-xs text-gray-400 mb-2">Получатель: {guest.name} ({guest.phone})</p>
+              <p className="text-xs text-gray-400 mb-2">Получатель: {guest.name} ({guest.phone}){guest.language ? ` · Язык: ${guestLanguageLabel(guest.language)}` : ''}</p>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <p className="text-sm text-gray-900 leading-relaxed">{smsPreview.text}</p>
               </div>
@@ -358,13 +360,14 @@ function EditGuestForm({ guest, onClose, onSave }: { guest: any; onClose: () => 
   const [phone, setPhone] = useState(guest.phone);
   const [email, setEmail] = useState(guest.email);
   const [passport, setPassport] = useState(guest.passport);
+  const [language, setLanguage] = useState<Guest['language'] | ''>(guest.language ?? '');
   const [checkIn, setCheckIn] = useState(guest.checkIn);
   const [checkOut, setCheckOut] = useState(guest.checkOut);
   const [status, setStatus] = useState(guest.status);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ name, phone, email, passport, checkIn, checkOut, status });
+    onSave({ name, phone, email, passport, language: language || undefined, checkIn, checkOut, status });
   };
 
   return (
@@ -386,6 +389,15 @@ function EditGuestForm({ guest, onClose, onSave }: { guest: any; onClose: () => 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <select value={language} onChange={e => setLanguage(e.target.value as Guest['language'] | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Не указан</option>
+          {GUEST_LANGUAGES.map(l => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

@@ -1,4 +1,19 @@
-import type { Guest, Payment } from '../types';
+import type { Guest, GuestLanguage, Payment } from '../types';
+
+export const GUEST_LANGUAGES: { value: GuestLanguage | ''; label: string }[] = [
+  { value: 'ru', label: 'Русский' },
+  { value: 'uk', label: 'Украинский' },
+  { value: 'pl', label: 'Польский' },
+  { value: 'en', label: 'Английский' },
+  { value: 'de', label: 'Немецкий' },
+  { value: 'es', label: 'Испанский' },
+  { value: 'fr', label: 'Французский' },
+  { value: 'other', label: 'Другой' },
+];
+
+export function guestLanguageLabel(lang?: GuestLanguage | '' | null): string {
+  return GUEST_LANGUAGES.find((l) => l.value === lang)?.label ?? 'Не указан';
+}
 
 export function roomOccupiedBeds(roomId: string, guests: Guest[]): number {
   return guests.filter(g => g.roomId === roomId && g.status === 'active').length;
