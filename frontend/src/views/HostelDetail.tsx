@@ -7,6 +7,7 @@ import {
   ChevronRight, DoorOpen, LayoutGrid, Clock, ArrowDownToLine, ArrowUpFromLine, Send, Filter, BarChart3, Edit3, X, UserPlus
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 import RoomDatePicker from '../components/RoomDatePicker';
@@ -17,6 +18,7 @@ type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' 
 export default function HostelDetail() {
   const { id } = useParams<{ id: string }>();
   const { hostels, rooms, guests, payments, updateHostel, addRoom } = useData();
+  const { t, tp } = useLanguage();
   const hostel = hostels.find(h => h.id === id);
   const [activeTab, setActiveTab] = useState<Tab>('map');
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,7 +45,7 @@ export default function HostelDetail() {
   const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all');
   const [roomTypeFilter, setRoomTypeFilter] = useState<string>('all');
 
-  if (!hostel) return <div className="p-8 text-center text-gray-400">Hostel not found</div>;
+  if (!hostel) return <div className="p-8 text-center text-gray-400">{t('Hostel not found')}</div>;
 
   const hostelRooms = rooms.filter(r => r.hostelId === id);
   const hostelGuests = guests.filter(g => g.hostelId === id);
@@ -53,13 +55,13 @@ export default function HostelDetail() {
   const computedOccupiedBeds = hostelOccupiedBeds(hostel.id, guests);
 
   const tabs: { key: Tab; label: string; count?: number; icon: React.ReactNode }[] = [
-    { key: 'map', label: 'Карта комнат', icon: <LayoutGrid size={16} /> },
-    { key: 'schedule', label: 'Расписание', icon: <Clock size={16} /> },
-    { key: 'residents', label: 'Жильцы', count: activeGuests.length, icon: <Users size={16} /> },
-    { key: 'debtors', label: 'Должники', count: debtors.length, icon: <AlertTriangle size={16} /> },
-    { key: 'guests', label: 'Все гости', count: hostelGuests.length, icon: <Users size={16} /> },
-    { key: 'payments', label: 'Платежи', count: hostelPayments.length, icon: <DollarSign size={16} /> },
-    { key: 'analytics', label: 'Аналитика', icon: <BarChart3 size={16} /> },
+    { key: 'map', label: t('Карта комнат'), icon: <LayoutGrid size={16} /> },
+    { key: 'schedule', label: t('Расписание'), icon: <Clock size={16} /> },
+    { key: 'residents', label: t('Жильцы'), count: activeGuests.length, icon: <Users size={16} /> },
+    { key: 'debtors', label: t('Должники'), count: debtors.length, icon: <AlertTriangle size={16} /> },
+    { key: 'guests', label: t('Все гости'), count: hostelGuests.length, icon: <Users size={16} /> },
+    { key: 'payments', label: t('Платежи'), count: hostelPayments.length, icon: <DollarSign size={16} /> },
+    { key: 'analytics', label: t('Аналитика'), icon: <BarChart3 size={16} /> },
   ];
 
   const occupancy = hostel.totalBeds > 0 ? Math.round((computedOccupiedBeds / hostel.totalBeds) * 100) : 0;
@@ -68,7 +70,7 @@ export default function HostelDetail() {
     <div className="p-4 sm:p-8">
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <        ArrowLeft size={16} />
-        Назад к списку
+        {t('Назад к списку')}
       </Link>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -88,12 +90,12 @@ export default function HostelDetail() {
                 <div className="flex flex-wrap gap-2 mt-3">
                   {hostel.floors !== undefined && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg">
-                      <LayoutGrid size={14} /> {hostel.floors} этажа
+                      <LayoutGrid size={14} /> {tp(hostel.floors, ['{n} этаж', '{n} этажа', '{n} этажей'])}
                     </span>
                   )}
                   {hostel.kitchens !== undefined && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">
-                      <DoorOpen size={14} /> Кухня: {hostel.kitchens}
+                      <DoorOpen size={14} /> {t('Кухня: {n}', { n: hostel.kitchens })}
                     </span>
                   )}
                   {hostel.parking && (
@@ -103,12 +105,12 @@ export default function HostelDetail() {
                   )}
                   {hostel.showers !== undefined && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">
-                      <Users size={14} /> Душ: {hostel.showers}
+                      <Users size={14} /> {t('Душ: {n}', { n: hostel.showers })}
                     </span>
                   )}
                   {hostel.toilets !== undefined && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg">
-                      <DoorOpen size={14} /> Туалет: {hostel.toilets}
+                      <DoorOpen size={14} /> {t('Туалет: {n}', { n: hostel.toilets })}
                     </span>
                   )}
                 </div>
@@ -117,21 +119,21 @@ export default function HostelDetail() {
           </div>
           <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
             <            Edit3 size={16} />
-            Редактировать
+            {t('Редактировать')}
           </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
-          <MiniStat icon={<BedDouble size={18} />} label="Кровати" value={`${computedOccupiedBeds}/${hostel.totalBeds}`} />
-          <MiniStat icon={<DoorOpen size={18} />} label="Комнаты" value={hostel.totalRooms} />
-          <MiniStat icon={<Users size={18} />} label="Жильцы" value={activeGuests.length} />
-          <MiniStat icon={<DollarSign size={18} />} label="Доход" value={`${(hostel.monthlyRevenue / 1000).toFixed(1)}к зл`} />
-          <MiniStat icon={<AlertTriangle size={18} />} label="Должники" value={debtors.length} danger={debtors.length > 0} />
+          <MiniStat icon={<BedDouble size={18} />} label={t('Кровати')} value={`${computedOccupiedBeds}/${hostel.totalBeds}`} />
+          <MiniStat icon={<DoorOpen size={18} />} label={t('Комнаты')} value={hostel.totalRooms} />
+          <MiniStat icon={<Users size={18} />} label={t('Жильцы')} value={activeGuests.length} />
+          <MiniStat icon={<DollarSign size={18} />} label={t('Доход')} value={`${(hostel.monthlyRevenue / 1000).toFixed(1)}к зл`} />
+          <MiniStat icon={<AlertTriangle size={18} />} label={t('Должники')} value={debtors.length} danger={debtors.length > 0} />
         </div>
 
         <div className="mt-4">
           <div className="flex items-center justify-between text-sm mb-1.5">
-            <span className="text-gray-400">Заполнение</span>
+            <span className="text-gray-400">{t('Заполнение')}</span>
             <span className="font-medium text-gray-700">{occupancy}%</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5">
@@ -195,11 +197,11 @@ export default function HostelDetail() {
         )}
       </div>
 
-      <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title="Добавить гостя">
+      <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title={t('Добавить гостя')}>
         <AddGuestForm onClose={() => setShowAddGuest(false)} hostelId={hostel.id} />
       </Modal>
 
-      <Modal isOpen={showEditHostel} onClose={() => setShowEditHostel(false)} title="Редактировать хостел">
+      <Modal isOpen={showEditHostel} onClose={() => setShowEditHostel(false)} title={t('Редактировать хостел')}>
         <form className="space-y-4" onSubmit={e => {
           e.preventDefault();
           updateHostel(hostel.id, {
@@ -226,64 +228,64 @@ export default function HostelDetail() {
           setShowEditHostel(false);
         }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Название хостела</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Название хостела')}</label>
             <input required type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Адрес</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Адрес')}</label>
             <input required type="text" value={editAddress} onChange={e => setEditAddress(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
 
           <div className="border-t border-gray-100 pt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Условия</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">{t('Условия')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Этажей</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Этажей')}</label>
                 <input type="number" min={1} value={editFloors ?? ''} onChange={e => setEditFloors(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Кухонь</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Кухонь')}</label>
                 <input type="number" min={0} value={editKitchens ?? ''} onChange={e => setEditKitchens(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Парковка</label>
-                <input type="text" value={editParking} onChange={e => setEditParking(e.target.value)} placeholder="напр. на 10 машин" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <label className="block text-xs text-gray-400 mb-1">{t('Парковка')}</label>
+                <input type="text" value={editParking} onChange={e => setEditParking(e.target.value)} placeholder={t('напр. на 10 машин')} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Душ</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Душ')}</label>
                 <input type="number" min={0} value={editShowers ?? ''} onChange={e => setEditShowers(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Туалеты</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Туалеты')}</label>
                 <input type="number" min={0} value={editToilets ?? ''} onChange={e => setEditToilets(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
           </div>
 
           <div className="border-t border-gray-100 pt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Новый номер</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">{t('Новый номер')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Номер *</label>
-                <input type="text" value={newRoomNumber} onChange={e => setNewRoomNumber(e.target.value)} placeholder="напр. 101" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <label className="block text-xs text-gray-400 mb-1">{t('Номер *')}</label>
+                <input type="text" value={newRoomNumber} onChange={e => setNewRoomNumber(e.target.value)} placeholder={t('напр. 101')} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Этаж</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Этаж')}</label>
                 <input type="number" min={1} value={newRoomFloor} onChange={e => setNewRoomFloor(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Кровати</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Кровати')}</label>
                 <input type="number" min={1} value={newRoomBeds} onChange={e => setNewRoomBeds(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Цена за кровать / сутки (zl)</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Цена за кровать / сутки (zl)')}</label>
                 <input type="number" min={0} value={newRoomPrice} onChange={e => setNewRoomPrice(Math.max(0, parseInt(e.target.value) || 0))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Тип</label>
+                <label className="block text-xs text-gray-400 mb-1">{t('Тип')}</label>
                 <select value={newRoomType} onChange={e => setNewRoomType(e.target.value as Room['type'])} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="economy">Эконом</option>
-                  <option value="standard">Стандарт</option>
+                  <option value="economy">{t('Эконом')}</option>
+                  <option value="standard">{t('Стандарт')}</option>
                   <option value="vip">VIP</option>
                 </select>
               </div>
@@ -291,18 +293,17 @@ export default function HostelDetail() {
             <div className="flex items-center gap-5 mt-3">
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" checked={newRoomBalcony} onChange={e => setNewRoomBalcony(e.target.checked)} className="w-4 h-4 rounded accent-indigo-600" />
-                Балкон
+                {t('Балкон')}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" checked={newRoomBathroom} onChange={e => setNewRoomBathroom(e.target.checked)} className="w-4 h-4 rounded accent-indigo-600" />
-                Свой санузел
-              </label>
-            </div>
+                {t('Свой санузел')}
+              </label>            </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setShowEditHostel(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
-            <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Сохранить</button>
+            <button type="button" onClick={() => setShowEditHostel(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
+            <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Сохранить')}</button>
           </div>
         </form>
       </Modal>
@@ -313,6 +314,7 @@ export default function HostelDetail() {
 function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: any[]; guests: any[]; roomTypeFilter: string; setRoomTypeFilter: (v: string) => void }) {
   const [now, setNow] = useState(new Date());
   const [addGuestRoom, setAddGuestRoom] = useState<{ id: string; number: string; hostelId: string; beds: number; pricePerBed: number } | null>(null);
+  const { t, locale } = useLanguage();
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -324,18 +326,18 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
   const filteredRooms = roomTypeFilter === 'all' ? rooms : rooms.filter(r => r.type === roomTypeFilter);
   const filteredFloors = [...new Set(filteredRooms.map(r => r.floor))].sort();
 
-  const typeLabels: Record<string, string> = { all: 'Все', standard: 'Стандарт', economy: 'Эконом', vip: 'VIP' };
+  const typeLabels: Record<string, string> = { all: t('Все'), standard: t('Стандарт'), economy: t('Эконом'), vip: 'VIP' };
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h3 className="font-semibold text-gray-900">Карта комнат</h3>
-          <p className="text-sm text-gray-400 mt-0.5">Визуализация доступности комнат в реальном времени</p>
+          <h3 className="font-semibold text-gray-900">{t('Карта комнат')}</h3>
+          <p className="text-sm text-gray-400 mt-0.5">{t('Визуализация доступности комнат в реальном времени')}</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="tabular-nums font-medium">{now.toLocaleTimeString('ru-RU')}</span>
+          <span className="tabular-nums font-medium">{now.toLocaleTimeString(locale)}</span>
         </div>
       </div>
 
@@ -356,9 +358,9 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">Свободно</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">Частично занято</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">Занято</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">{t('Свободно')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">{t('Частично занято')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">{t('Занято')}</span></div>
         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-indigo-400" /><span className="text-xs text-gray-500">VIP</span></div>
       </div>
 
@@ -368,7 +370,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
           return (
             <div key={floor}>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Этаж {floor}</span>
+                <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">{t('Этаж {n}', { n: floor })}</span>
                 <div className="flex-1 h-px bg-gray-100" />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -395,7 +397,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                     <Link href={`/room/${room.id}`} key={room.id} className={`relative border-2 rounded-xl overflow-hidden transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer block ${borderColor}`}>
                       {room.photos?.[0] && (
                         <div className="h-16 w-full overflow-hidden">
-                          <img src={room.photos[0]} alt={`Комната ${room.number}`} className="w-full h-full object-cover" />
+                          <img src={room.photos[0]} alt={t('Комната {n}', { n: room.number })} className="w-full h-full object-cover" />
                         </div>
                       )}
                       <div className="p-4">
@@ -403,12 +405,12 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                         <span className="text-lg font-bold text-gray-900">{room.number}</span>
                         <div className="flex items-center gap-1.5">
                           {room.hasBalcony && (
-                            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded" title="Балкон">
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded" title={t('Балкон')}>
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> балкон
                             </span>
                           )}
                           {room.hasPrivateBathroom && (
-                            <span className="flex items-center gap-1 text-[10px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded" title="Свой санузел">
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded" title={t('Свой санузел')}>
                               <span className="w-1.5 h-1.5 rounded-full bg-sky-500" /> санузел
                             </span>
                           )}
@@ -423,7 +425,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                         ))}
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500 font-medium">{actualOccupied}/{room.beds} мест</span>
+                        <span className="text-gray-500 font-medium">{t('{a}/{b} мест', { a: actualOccupied, b: room.beds })}</span>
                         <span className="text-gray-400">{room.pricePerBed} зл</span>
                       </div>
                       <button
@@ -431,7 +433,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                           onClick={e => { e.preventDefault(); e.stopPropagation(); setAddGuestRoom(room); }}
                           className="mt-2 w-full py-1.5 rounded-lg border border-dashed border-emerald-300 text-emerald-600 text-[11px] font-medium hover:bg-emerald-50 transition-colors inline-flex items-center justify-center gap-1"
                         >
-                          <UserPlus size={12} /> Добавить гостя
+                          <UserPlus size={12} /> {t('Добавить гостя')}
                         </button>
                       </div>
                       {(todayCheckin.length > 0 || todayCheckout.length > 0) && (
@@ -450,7 +452,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
       </div>
 
       {addGuestRoom && (
-        <Modal isOpen={!!addGuestRoom} onClose={() => setAddGuestRoom(null)} title={`Добавить гостя — Номер ${addGuestRoom.number}`}>
+        <Modal isOpen={!!addGuestRoom} onClose={() => setAddGuestRoom(null)} title={t('Добавить гостя — Номер {n}', { n: addGuestRoom.number })}>
           <RoomAddGuestForm room={addGuestRoom} onClose={() => setAddGuestRoom(null)} />
         </Modal>
       )}
@@ -460,6 +462,7 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
 
 function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: string; hostelId: string; beds: number; pricePerBed: number }; onClose: () => void }) {
   const { addGuestWithPayment, guests } = useData();
+  const { t, tp } = useLanguage();
   const todayStr = new Date().toISOString().split('T')[0];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -503,41 +506,41 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
       );
       onClose();
     } catch (err) {
-      alert('Не удалось сохранить гостя: ' + (err instanceof Error ? err.message : 'ошибка сервера'));
+      alert(t('Не удалось сохранить гостя: {err}', { err: err instanceof Error ? err.message : 'ошибка сервера' }));
     }
   };
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
-        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('Ян Ковальски')} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
           <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="jan@email.com" />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Паспорт / ID')}</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Язык общения')}</label>
         <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Не указан</option>
+          <option value="">{t('Не указан')}</option>
           {GUEST_LANGUAGES.map(l => (
-            <option key={l.value} value={l.value}>{l.label}</option>
+            <option key={l.value} value={l.value}>{t(l.label)}</option>
           ))}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Заселение')}</label>
         <RoomDatePicker
           roomId={room.id}
           beds={room.beds}
@@ -548,20 +551,20 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение')}</label>
         <input required type="date" min={checkIn || undefined} value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       {nights > 0 && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-indigo-600">{room.pricePerBed} зл × {nights} ночей</span>
+            <span className="text-indigo-600">{room.pricePerBed} зл × {tp(nights, ['{n} ночь', '{n} ночи', '{n} ночей'])}</span>
             <span className="font-bold text-indigo-700">{totalCost.toLocaleString()} зл</span>
           </div>
         </div>
       )}
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
-        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Добавить</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>
       </div>
     </form>
   );
@@ -569,6 +572,7 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
 
 function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: any[]; payments: any[]; hostel: any }) {
   const { addGuestWithPayment } = useData();
+  const { t, tp, monthShort, dayNamesSunFirst, locale } = useLanguage();
   const [now, setNow] = useState(new Date());
   const [range, setRange] = useState<7 | 14 | 30>(7);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -614,8 +618,8 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
     return guests.filter(g => g.status === 'active' && g.checkIn <= ds && g.checkOut > ds).length;
   };
 
-  const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-  const monthNames = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+  const dayNames = dayNamesSunFirst;
+  const monthNames = monthShort;
 
   const totalCheckins = days.reduce((s, d) => s + getEvents(d).checkins.length, 0);
   const totalCheckouts = days.reduce((s, d) => s + getEvents(d).checkouts.length, 0);
@@ -627,20 +631,20 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h3 className="font-semibold text-gray-900">Расписание заселений и выселений</h3>
+          <h3 className="font-semibold text-gray-900">{t('Расписание заселений и выселений')}</h3>
           <p className="text-sm text-gray-400 mt-0.5">
-            {totalCheckins} заселений · {totalCheckouts} выселений в ближайшие {range} дней
+            {t('{a} заселений · {b} выселений в ближайшие {n} дней', { a: totalCheckins, b: totalCheckouts, n: range })}
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="tabular-nums font-medium">{now.toLocaleTimeString('ru-RU')}</span>
+<span className="tabular-nums font-medium">{now.toLocaleTimeString(locale)}</span>
           </div>
           <div className="flex bg-gray-100 rounded-lg p-0.5">
             {[7, 14, 30].map(r => (
               <button key={r} onClick={() => setRange(r as 7 | 14 | 30)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${range === r ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
-                {r} дн.
+                {t('{n} дн.', { n: r })}
               </button>
             ))}
           </div>
@@ -648,12 +652,12 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
       </div>
 
       <div className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="flex items-center gap-2"><ArrowDownToLine size={14} className="text-emerald-500" /><span className="text-xs text-gray-500">Заселение</span></div>
-        <div className="flex items-center gap-2"><ArrowUpFromLine size={14} className="text-amber-500" /><span className="text-xs text-gray-500">Выселение</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">Много мест</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">Мало мест</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">Полностью</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded border border-red-300 bg-red-50" /><span className="text-xs text-gray-500">Есть долг</span></div>
+        <div className="flex items-center gap-2"><ArrowDownToLine size={14} className="text-emerald-500" /><span className="text-xs text-gray-500">{t('Заселение')}</span></div>
+        <div className="flex items-center gap-2"><ArrowUpFromLine size={14} className="text-amber-500" /><span className="text-xs text-gray-500">{t('Выселение')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">{t('Много мест')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">{t('Мало мест')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">{t('Полностью')}</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded border border-red-300 bg-red-50" /><span className="text-xs text-gray-500">{t('Есть долг')}</span></div>
       </div>
 
       <div className="overflow-x-auto -mx-6 px-6">
@@ -676,12 +680,12 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                     <p className={`text-xs font-medium ${isToday ? 'text-indigo-600' : 'text-gray-400'}`}>{dayNames[day.getDay()]}</p>
                     <p className={`text-lg font-bold ${isToday ? 'text-indigo-600' : 'text-gray-900'}`}>{day.getDate()}</p>
                     <p className={`text-xs ${isToday ? 'text-indigo-400' : 'text-gray-400'}`}>{monthNames[day.getMonth()]}</p>
-                    {isToday && <span className="inline-block mt-1 text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">СЕГОДНЯ</span>}
+                    {isToday && <span className="inline-block mt-1 text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">{t('СЕГОДНЯ')}</span>}
                   </div>
 
                   <div className={`mb-2 p-1.5 rounded-lg text-center ${isFull ? 'bg-red-100' : isLow ? 'bg-amber-100' : 'bg-emerald-100'}`}>
                     <p className={`text-[10px] font-bold ${isFull ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
-                      {free} св.
+                      {t('{n} св.', { n: free })}
                     </p>
                     <div className="w-full bg-white/60 rounded-full h-1 mt-1">
                       <div className={`h-1 rounded-full ${isFull ? 'bg-red-400' : isLow ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${occupancyPct}%` }} />
@@ -699,7 +703,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                             <p className={`text-[11px] font-semibold truncate ${hasUnpaid ? 'text-red-800 group-hover:text-red-900' : 'text-emerald-800 group-hover:text-emerald-900'}`}>{g.name}</p>
                             {hasUnpaid && <AlertTriangle size={10} className="text-red-500 shrink-0" />}
                           </div>
-                          <p className={`text-[10px] ml-3.5 ${hasUnpaid ? 'text-red-500' : 'text-emerald-600'}`}>Ном. {room?.number}</p>
+                          <p className={`text-[10px] ml-3.5 ${hasUnpaid ? 'text-red-500' : 'text-emerald-600'}`}>{t('Ном. {n}', { n: room?.number ?? '' })}</p>
                         </Link>
                       );
                     })}
@@ -713,7 +717,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                             <p className={`text-[11px] font-semibold truncate ${hasUnpaid ? 'text-red-800 group-hover:text-red-900' : 'text-amber-800 group-hover:text-amber-900'}`}>{g.name}</p>
                             {hasUnpaid && <AlertTriangle size={10} className="text-red-500 shrink-0" />}
                           </div>
-                          <p className={`text-[10px] ml-3.5 ${hasUnpaid ? 'text-red-500' : 'text-amber-600'}`}>Ном. {room?.number}</p>
+                          <p className={`text-[10px] ml-3.5 ${hasUnpaid ? 'text-red-500' : 'text-amber-600'}`}>{t('Ном. {n}', { n: room?.number ?? '' })}</p>
                         </Link>
                       );
                     })}
@@ -725,7 +729,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                       className="mt-2 py-1.5 px-2 mx-auto rounded-lg border border-dashed border-indigo-300 text-indigo-500 text-[11px] font-medium hover:bg-indigo-50 hover:border-indigo-400 transition-colors inline-flex items-center gap-1 shrink-0 leading-none max-w-full"
                     >
                       <UserPlus size={12} strokeWidth={2} className="shrink-0" />
-                      <span className="leading-none pt-px whitespace-nowrap overflow-hidden text-ellipsis">Добавить</span>
+                      <span className="leading-none pt-px whitespace-nowrap overflow-hidden text-ellipsis">{t('Добавить')}</span>
                     </button>
                   )}
                 </div>
@@ -739,11 +743,11 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-2 mb-4">
             <DoorOpen size={16} className="text-indigo-500" />
-            <h4 className="font-semibold text-gray-900 text-sm">Свободные комнаты</h4>
-            <span className="ml-auto text-xs text-gray-400">{availableRooms.length} из {rooms.length}</span>
+            <h4 className="font-semibold text-gray-900 text-sm">{t('Свободные комнаты')}</h4>
+            <span className="ml-auto text-xs text-gray-400">{t('{a} из {b}', { a: availableRooms.length, b: rooms.length })}</span>
           </div>
           {availableRooms.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">Нет свободных комнат</p>
+            <p className="text-xs text-gray-400 text-center py-4">{t('Нет свободных комнат')}</p>
           ) : (
             <div className="space-y-2 max-h-[240px] overflow-y-auto">
               {availableRooms.map(r => {
@@ -754,8 +758,8 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 w-10">{r.number}</span>
                       <div>
-                        <p className="text-xs text-gray-500">{free} свободн.</p>
-                        <p className="text-[10px] text-gray-400">{r.type} · этаж {r.floor} · {r.pricePerBed} зл</p>
+                        <p className="text-xs text-gray-500">{t('{n} свободн.', { n: free })}</p>
+                        <p className="text-[10px] text-gray-400">{t('{type} · этаж {floor} · {price} зл', { type: r.type, floor: r.floor, price: r.pricePerBed })}</p>
                       </div>
                     </div>
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold ${free >= 3 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
@@ -771,10 +775,10 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-2 mb-4">
             <Calendar size={16} className="text-amber-500" />
-            <h4 className="font-semibold text-gray-900 text-sm">Ближайшие выселения</h4>
+            <h4 className="font-semibold text-gray-900 text-sm">{t('Ближайшие выселения')}</h4>
           </div>
           {occupiedRooms.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">Нет занятых комнат</p>
+            <p className="text-xs text-gray-400 text-center py-4">{t('Нет занятых комнат')}</p>
           ) : (
             <div className="space-y-2 max-h-[240px] overflow-y-auto">
               {occupiedRooms
@@ -795,7 +799,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                       <span className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 w-10">{r.number}</span>
                       <div>
                         <p className="text-xs text-gray-500">{guest.name}</p>
-                        <p className="text-[10px] text-gray-400">Выселение: {checkout}</p>
+                        <p className="text-[10px] text-gray-400">{t('Выселение: {date}', { date: checkout })}</p>
                       </div>
                     </div>
                     <div className={`px-2 py-1 rounded-lg text-[10px] font-bold ${
@@ -803,7 +807,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                       daysUntil <= 2 ? 'bg-amber-100 text-amber-600' :
                       'bg-emerald-100 text-emerald-600'
                     }`}>
-                      {daysUntil <= 0 ? 'Dzisiaj' : daysUntil === 1 ? 'Jutro' : `Za ${daysUntil} dni`}
+                      {daysUntil <= 0 ? t('Сегодня') : daysUntil === 1 ? t('Завтра') : t('Через {n} дн.', { n: daysUntil })}
                     </div>
                   </Link>
                 ))}
@@ -817,8 +821,8 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div>
-                <h3 className="font-semibold text-gray-900">Добавить гостя</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Заселение: {selectedDate}</p>
+                <h3 className="font-semibold text-gray-900">{t('Добавить гостя')}</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{t('Заселение: {date}', { date: selectedDate })}</p>
               </div>
               <button onClick={() => setShowAddGuest(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                 <X size={18} className="text-gray-400" />
@@ -845,53 +849,53 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                 );
                 setShowAddGuest(false);
               } catch (err) {
-                alert('Не удалось сохранить гостя: ' + (err instanceof Error ? err.message : 'ошибка сервера'));
+                alert(t('Не удалось сохранить гостя: {err}', { err: err instanceof Error ? err.message : 'ошибка сервера' }));
               }
             }} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Имя и фамилия *</label>
-                <input type="text" required value={gName} onChange={e => setGName(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="напр. Ян Ковальски" />
+                <label className="block text-xs font-medium text-gray-500 mb-1">{t('Имя и фамилия *')}</label>
+                <input type="text" required value={gName} onChange={e => setGName(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder={t('напр. Ян Ковальски')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Телефон *</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('Телефон *')}</label>
                   <input type="tel" required value={gPhone} onChange={e => setGPhone(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="+48 ..." />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('Email')}</label>
                   <input type="email" value={gEmail} onChange={e => setGEmail(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="email@..." />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Номер паспорта</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{t('Номер паспорта')}</label>
                 <input type="text" value={gPassport} onChange={e => setGPassport(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="AB1234567" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Язык общения</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{t('Язык общения')}</label>
                 <select value={gLanguage} onChange={e => setGLanguage(e.target.value as GuestLanguage | '')} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                  <option value="">Не указан</option>
+                  <option value="">{t('Не указан')}</option>
                   {GUEST_LANGUAGES.map(l => (
                     <option key={l.value} value={l.value}>{l.label}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Комната *</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{t('Комната *')}</label>
                 <select required value={gRoomId} onChange={e => setGRoomId(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                  <option value="">Выберите комнату...</option>
+                  <option value="">{t('Выберите комнату...')}</option>
                   {rooms.filter(r => roomOccupiedBeds(r.id, guests) < r.beds).map(r => {
                     const free = r.beds - roomOccupiedBeds(r.id, guests);
-                    return <option key={r.id} value={r.id}>Ном. {r.number} — {free} св. ({r.pricePerBed} зл/ночь)</option>;
+                    return <option key={r.id} value={r.id}>{t('Ном. {n} — {free} св. ({price} зл/ночь)', { n: r.number, free, price: r.pricePerBed })}</option>;
                   })}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Заселение *</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('Заселение *')}</label>
                   <input type="date" required value={selectedDate} readOnly className="w-full px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-600 cursor-not-allowed" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Выселение *</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('Выселение *')}</label>
                   <input type="date" required value={gCheckOut} onChange={e => setGCheckOut(e.target.value)} min={selectedDate} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                 </div>
               </div>
@@ -901,13 +905,13 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                 const nights = Math.max(1, Math.ceil((new Date(gCheckOut).getTime() - new Date(selectedDate).getTime()) / (1000 * 60 * 60 * 24)));
                 return (
                   <div className="bg-indigo-50 rounded-xl p-3 text-center">
-                    <p className="text-xs text-indigo-600">{nights} {nights === 1 ? 'ночь' : nights <= 4 ? 'ночи' : 'ночей'} × {room.pricePerBed} зл</p>
+                    <p className="text-xs text-indigo-600">{tp(nights, ['{n} ночь', '{n} ночи', '{n} ночей'])} × {room.pricePerBed} зл</p>
                     <p className="text-lg font-bold text-indigo-700">{(nights * room.pricePerBed).toLocaleString()} зл</p>
                   </div>
                 );
               })()}
               <button type="submit" disabled={!gName || !gPhone || !gRoomId || !gCheckOut} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 transition-colors">
-                Добавить гостя
+                {t('Добавить гостя')}
               </button>
             </form>
           </div>
@@ -918,16 +922,17 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
 }
 
 function TabActions({ search, onSearch, onAdd }: { search: string; onSearch: (v: string) => void; onAdd?: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
       <div className="relative flex-1 max-w-sm">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-        <input type="text" placeholder="Поиск..." value={search} onChange={e => onSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+        <input type="text" placeholder={t('Поиск...')} value={search} onChange={e => onSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
       </div>
       {onAdd && (
         <button onClick={onAdd} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
           <Plus size={18} />
-           Добавить гостя
+           {t('Добавить гостя')}
         </button>
       )}
     </div>
@@ -947,15 +952,16 @@ function MiniStat({ icon, label, value, danger }: { icon: React.ReactNode; label
 }
 
 function GuestFilterBar({ filter, onFilter, paymentFilter, onPaymentFilter }: { filter: string; onFilter: (v: string) => void; paymentFilter: string; onPaymentFilter: (v: string) => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-2 mb-4 flex-wrap">
       <Filter size={14} className="text-gray-400" />
       <div className="flex bg-gray-100 rounded-lg p-0.5">
         {[
-          { key: 'all', label: 'Все' },
-          { key: 'active', label: 'Активные' },
-          { key: 'reserved', label: 'Забронированы' },
-          { key: 'checked_out', label: 'Выселены' },
+          { key: 'all', label: t('Все') },
+          { key: 'active', label: t('Активные') },
+          { key: 'reserved', label: t('Забронированы') },
+          { key: 'checked_out', label: t('Выселены') },
         ].map(f => (
           <button key={f.key} onClick={() => onFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -964,10 +970,10 @@ function GuestFilterBar({ filter, onFilter, paymentFilter, onPaymentFilter }: { 
       </div>
       <div className="flex bg-gray-100 rounded-lg p-0.5">
         {[
-          { key: 'all', label: 'Оплата: все' },
-          { key: 'paid', label: 'Оплатили' },
-          { key: 'pending', label: 'В ожидании' },
-          { key: 'unpaid', label: 'Не оплатили' },
+          { key: 'all', label: t('Оплата: все') },
+          { key: 'paid', label: t('Оплатили') },
+          { key: 'pending', label: t('В ожидании') },
+          { key: 'unpaid', label: t('Не оплатили') },
         ].map(f => (
           <button key={f.key} onClick={() => onPaymentFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${paymentFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -979,15 +985,16 @@ function GuestFilterBar({ filter, onFilter, paymentFilter, onPaymentFilter }: { 
 }
 
 function ResidentFilterBar({ paymentFilter, onPaymentFilter }: { paymentFilter: string; onPaymentFilter: (v: string) => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-2 mb-4 flex-wrap">
       <Filter size={14} className="text-gray-400" />
       <div className="flex bg-gray-100 rounded-lg p-0.5">
         {[
-          { key: 'all', label: 'Оплата: все' },
-          { key: 'paid', label: 'Оплатили' },
-          { key: 'pending', label: 'В ожидании' },
-          { key: 'unpaid', label: 'Не оплатили' },
+          { key: 'all', label: t('Оплата: все') },
+          { key: 'paid', label: t('Оплатили') },
+          { key: 'pending', label: t('В ожидании') },
+          { key: 'unpaid', label: t('Не оплатили') },
         ].map(f => (
           <button key={f.key} onClick={() => onPaymentFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${paymentFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -1000,6 +1007,7 @@ function ResidentFilterBar({ paymentFilter, onPaymentFilter }: { paymentFilter: 
 
 function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests: any[]; search: string; statusFilter: string; paymentFilter: string }) {
   const { rooms, payments } = useData();
+  const { t } = useLanguage();
   const filtered = g.filter(x => {
     const matchesSearch = x.name.toLowerCase().includes(search.toLowerCase()) || x.phone.includes(search);
     const matchesStatus = statusFilter === 'all' || x.status === statusFilter;
@@ -1007,7 +1015,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'pending' ? payments.some(p => p.guestId === x.id && p.status === 'pending') : payments.some(p => p.guestId === x.id && p.status === 'overdue'));
     return matchesSearch && matchesStatus && matchesPayment;
   });
-  if (filtered.length === 0) return <EmptyState text="Гости не найдены" />;
+  if (filtered.length === 0) return <EmptyState text={t('Гости не найдены')} />;
 
   return (
     <>
@@ -1020,7 +1028,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
                 <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-xs shrink-0">{guest.name.split(' ').map((n: string) => n[0]).join('')}</div>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors truncate text-sm">{guest.name}</p>
-                   <p className="text-xs text-gray-400 truncate">Ном. {room?.number}</p>
+                   <p className="text-xs text-gray-400 truncate">{t('Ном. {n}', { n: room?.number ?? '' })}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -1032,7 +1040,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
                     window.location.href = `tel:${guest.phone.replace(/\s/g, '')}`;
                   }}
                   className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors shrink-0"
-                  title={`Zadzwon: ${guest.phone}`}
+                  title={t('Позвонить: {phone}', { phone: guest.phone })}
                 >
                   <Phone size={14} />
                 </button>
@@ -1046,10 +1054,10 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left">
-              <th className="px-4 py-3 font-medium text-gray-400">Гость</th>
-              <th className="px-4 py-3 font-medium text-gray-400">Комната</th>
-              <th className="px-4 py-3 font-medium text-gray-400">Срок</th>
-              <th className="px-4 py-3 font-medium text-gray-400 text-right">Status</th>
+              <th className="px-4 py-3 font-medium text-gray-400">{t('Гость')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400">{t('Комната')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400">{t('Срок')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('Статус')}</th>
               <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>
@@ -1064,7 +1072,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
                       <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors truncate">{guest.name}</p>
                     </div>
                   </td>
-                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">Комната {room?.number}</td>
+                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{t('Комната {n}', { n: room?.number ?? '' })}</td>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
                     <span className="flex items-center gap-1"><Calendar size={12} className="text-gray-300" />{guest.checkIn} — {guest.checkOut}</span>
                   </td>
@@ -1074,7 +1082,7 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
                       href={`tel:${guest.phone.replace(/\s/g, '')}`}
                       onClick={e => e.stopPropagation()}
                       className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors shrink-0"
-                   title={`Позвонить: ${guest.phone}`}
+title={t('Позвонить: {phone}', { phone: guest.phone })}
                     >
                       <Phone size={14} />
                     </a>
@@ -1091,8 +1099,9 @@ function GuestsList({ guests: g, search, statusFilter, paymentFilter }: { guests
 
 function DebtorsList({ guests: g, search }: { guests: any[]; search: string }) {
   const { rooms, payments } = useData();
+  const { t } = useLanguage();
   const filtered = g.filter(x => x.name.toLowerCase().includes(search.toLowerCase()));
-  if (filtered.length === 0) return <EmptyState text="Нет должников" />;
+  if (filtered.length === 0) return <EmptyState text={t('Нет должников')} />;
   return (
     <div className="space-y-2">
       {filtered.map(guest => {
@@ -1104,19 +1113,19 @@ function DebtorsList({ guests: g, search }: { guests: any[]; search: string }) {
               <div className="w-11 h-11 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-semibold text-sm">{guest.name.split(' ').map((n: string) => n[0]).join('')}</div>
               <div>
                 <p className="font-medium text-gray-900 group-hover:text-red-600 transition-colors">{guest.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Комната {room?.number} · {guest.phone}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('Комната {n} · {phone}', { n: room?.number ?? '', phone: guest.phone })}</p>
               </div>
             </Link>
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right">
                 <p className="font-semibold text-red-500">{due.toLocaleString()} зл</p>
-                <p className="text-xs text-gray-400">долг</p>
+                <p className="text-xs text-gray-400">{t('долг')}</p>
               </div>
               <a
                 href={`tel:${guest.phone.replace(/\s/g, '')}`}
                 onClick={e => e.stopPropagation()}
                 className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors"
-                title={`Позвонить: ${guest.phone}`}
+                title={t('Позвонить: {phone}', { phone: guest.phone })}
               >
                 <Phone size={16} />
               </a>
@@ -1130,13 +1139,14 @@ function DebtorsList({ guests: g, search }: { guests: any[]; search: string }) {
 
 function ResidentsList({ guests: g, search, paymentFilter }: { guests: any[]; search: string; paymentFilter: string }) {
   const { rooms, payments } = useData();
+  const { t } = useLanguage();
   const filtered = g.filter(x => {
     const matchesSearch = x.name.toLowerCase().includes(search.toLowerCase());
     const due = guestTotalDue(x.id, payments);
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' ? due <= 0 : paymentFilter === 'pending' ? payments.some(p => p.guestId === x.id && p.status === 'pending') : payments.some(p => p.guestId === x.id && p.status === 'overdue'));
     return matchesSearch && matchesPayment;
   });
-  if (filtered.length === 0) return <EmptyState text="Нет жильцов" />;
+  if (filtered.length === 0) return <EmptyState text={t('Нет жильцов')} />;
   return (
     <div className="space-y-2">
       {filtered.map(guest => {
@@ -1149,13 +1159,13 @@ function ResidentsList({ guests: g, search, paymentFilter }: { guests: any[]; se
               <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-semibold text-sm">{guest.name.split(' ').map((n: string) => n[0]).join('')}</div>
               <div>
                 <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">{guest.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Комната {room?.number} · Заселение {guest.checkIn}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('Комната {n} · Заселение {date}', { n: room?.number ?? '', date: guest.checkIn })}</p>
               </div>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-right">
-                <p className="text-sm text-gray-700">{paid.toLocaleString()} зл <span className="text-xs text-gray-400">оплачено</span></p>
-                {due > 0 && <p className="text-sm text-red-500">{due.toLocaleString()} зл <span className="text-xs text-gray-400">долг</span></p>}
+                <p className="text-sm text-gray-700">{paid.toLocaleString()} зл <span className="text-xs text-gray-400">{t('оплачено')}</span></p>
+                {due > 0 && <p className="text-sm text-red-500">{due.toLocaleString()} зл <span className="text-xs text-gray-400">{t('долг')}</span></p>}
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:text-indigo-500 transition-colors" />
             </div>
@@ -1167,18 +1177,19 @@ function ResidentsList({ guests: g, search, paymentFilter }: { guests: any[]; se
 }
 
 function PaymentFilterBar({ statusFilter, onStatusFilter, typeFilter, onTypeFilter }: { statusFilter: string; onStatusFilter: (v: string) => void; typeFilter: string; onTypeFilter: (v: string) => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
       <div className="flex items-center gap-2">
         <Filter size={14} className="text-gray-400" />
-        <span className="text-xs text-gray-400">Status:</span>
+        <span className="text-xs text-gray-400">{t('Статус:')}</span>
       </div>
       <div className="flex bg-gray-100 rounded-lg p-0.5 flex-wrap">
         {[
-          { key: 'all', label: 'Все' },
-          { key: 'paid', label: 'Оплачено' },
-          { key: 'pending', label: 'Ожидает' },
-          { key: 'overdue', label: 'Просрочено' },
+          { key: 'all', label: t('Все') },
+          { key: 'paid', label: t('Оплачено') },
+          { key: 'pending', label: t('Ожидает') },
+          { key: 'overdue', label: t('Просрочено') },
         ].map(f => (
           <button key={f.key} onClick={() => onStatusFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -1187,14 +1198,14 @@ function PaymentFilterBar({ statusFilter, onStatusFilter, typeFilter, onTypeFilt
       </div>
       <div className="w-px h-4 bg-gray-200 hidden sm:block" />
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400">Typ:</span>
+        <span className="text-xs text-gray-400">{t('Тип:')}</span>
       </div>
       <div className="flex bg-gray-100 rounded-lg p-0.5 flex-wrap">
         {[
-          { key: 'all', label: 'Все' },
-          { key: 'cash', label: 'Наличные' },
-          { key: 'card', label: 'Карта' },
-          { key: 'transfer', label: 'Перевод' },
+          { key: 'all', label: t('Все') },
+          { key: 'cash', label: t('Наличные') },
+          { key: 'card', label: t('Карта') },
+          { key: 'transfer', label: t('Перевод') },
         ].map(f => (
           <button key={f.key} onClick={() => onTypeFilter(f.key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${typeFilter === f.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
             {f.label}
@@ -1207,11 +1218,12 @@ function PaymentFilterBar({ statusFilter, onStatusFilter, typeFilter, onTypeFilt
 
 function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payments: any[]; search: string; statusFilter: string; typeFilter: string }) {
   const { rooms, guests, hostels, updatePayment } = useData();
+  const { t, tp } = useLanguage();
   const [smsPreview, setSmsPreview] = useState<{ text: string; guestName: string; guestPhone: string; paymentId: string } | null>(null);
 
   const getSmsText = (payment: any, guest: any) => {
     const hostel = hostels.find((h: any) => h.id === guest?.hostelId);
-    return `Уважаемый/ая ${payment.guestName.split(' ')[0]}, напоминаем об оплате в размере ${payment.amount.toLocaleString()} зл, срок которой ${payment.dueDate}. Хостел ${hostel?.name || ''}.`;
+    return t('Уважаемый/ая {name}, напоминаем об оплате в размере {amount} зл, срок которой {date}. Хостел {hostel}.', { name: payment.guestName.split(' ')[0], amount: payment.amount.toLocaleString(), date: payment.dueDate, hostel: hostel?.name || '' });
   };
 
   const confirmSendSms = () => {
@@ -1226,7 +1238,7 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
     const matchesType = typeFilter === 'all' || x.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
-  if (filtered.length === 0) return <EmptyState text="Нет платежей" />;
+  if (filtered.length === 0) return <EmptyState text={t('Нет платежей')} />;
 
   return (
     <>
@@ -1242,13 +1254,13 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
                     {payment.guestName}
                   </Link>
                   {guest && (
-                    <a href={`tel:${guest.phone.replace(/\s/g, '')}`} className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center shrink-0 transition-colors" title={`Позвонить: ${guest.phone}`}>
+                    <a href={`tel:${guest.phone.replace(/\s/g, '')}`} className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center shrink-0 transition-colors" title={t('Позвонить: {phone}', { phone: guest.phone })}>
                       <Phone size={13} />
                     </a>
                   )}
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">Ном. {rooms.find((r: any) => r.id === payment.roomId)?.number} · {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Срок {payment.dueDate}{payment.paidDate ? ` · оплачено ${payment.paidDate}` : ''}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('Ном. {n}', { n: rooms.find((r: any) => r.id === payment.roomId)?.number ?? '' })} · {payment.type === 'card' ? t('Карта') : payment.type === 'cash' ? t('Наличные') : t('Перевод')}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('Срок {date}', { date: payment.dueDate })}{payment.paidDate ? t(' · оплачено {date}', { date: payment.paidDate }) : ''}</p>
               </div>
               <div className="text-right shrink-0">
                 <p className="font-semibold text-gray-900">{payment.amount.toLocaleString()} зл</p>
@@ -1293,13 +1305,13 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
       </colgroup>
       <thead>
         <tr className="bg-gray-50 text-left border-t border-gray-100">
-          <th className="px-5 py-3 font-medium text-gray-400">Гость</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Комната</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Сумма</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Срок</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Оплачено</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Тип</th>
-          <th className="px-5 py-3 font-medium text-gray-400">Статус</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Гость')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Комната')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Сумма')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Срок')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Оплачено')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Тип')}</th>
+          <th className="px-5 py-3 font-medium text-gray-400">{t('Статус')}</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-50">
@@ -1322,7 +1334,7 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
                           ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                           : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 opacity-0 group-hover:opacity-100'
                       }`}
-                        title={`Позвонить: ${guest.phone}`}
+title={t('Позвонить: {phone}', { phone: guest.phone })}
                     >
                       <Phone size={13} />
                     </a>
@@ -1335,7 +1347,7 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
                           paymentId: payment.id,
                         })}
                         className="w-7 h-7 rounded-full flex items-center justify-center transition-colors shrink-0 bg-blue-100 text-blue-600 hover:bg-blue-200"
-                        title="Отправить SMS"
+                        title={t('Отправить SMS')}
                       >
                         <Send size={13} />
                       </button>
@@ -1344,11 +1356,11 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
                 )}
               </div>
             </td>
-            <td className="px-5 py-3 text-gray-500">Ном. {rooms.find((r: any) => r.id === payment.roomId)?.number}</td>
+            <td className="px-5 py-3 text-gray-500">{t('Ном. {n}', { n: rooms.find((r: any) => r.id === payment.roomId)?.number ?? '' })}</td>
             <td className="px-5 py-3 font-semibold text-gray-900">{payment.amount.toLocaleString()} зл</td>
             <td className="px-5 py-3 text-gray-500 text-xs">{payment.dueDate}</td>
             <td className="px-5 py-3 text-gray-400 text-xs">{payment.paidDate || '-'}</td>
-            <td className="px-5 py-3 text-gray-500">{payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'}</td>
+            <td className="px-5 py-3 text-gray-500">{payment.type === 'card' ? t('Карта') : payment.type === 'cash' ? t('Наличные') : t('Перевод')}</td>
             <td className="px-5 py-3">
               <PaymentStatus status={payment.status} />
             </td>
@@ -1359,7 +1371,7 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
     </table>
     </div>
 
-    <Modal isOpen={!!smsPreview} onClose={() => setSmsPreview(null)} title="Отправка SMS">
+    <Modal isOpen={!!smsPreview} onClose={() => setSmsPreview(null)} title={t('Отправка SMS')}>
       {smsPreview && (
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
@@ -1373,15 +1385,15 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
               </div>
             </div>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{smsPreview.text}</p>
-            <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-200">{smsPreview.text.length} символов</p>
+            <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-200">{tp(smsPreview.text.length, ['{n} символ', '{n} символа', '{n} символов'])}</p>
           </div>
           <div className="flex gap-3">
             <button onClick={() => setSmsPreview(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">
-              Отмена
+              {t('Отмена')}
             </button>
             <button onClick={confirmSendSms} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-sm inline-flex items-center justify-center gap-2">
               <Send size={14} />
-              Отправить
+              {t('Отправить')}
             </button>
           </div>
         </div>
@@ -1392,14 +1404,16 @@ function PaymentsList({ payments: p, search, statusFilter, typeFilter }: { payme
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useLanguage();
   const styles: Record<string, string> = { active: 'bg-emerald-100 text-emerald-700', checked_out: 'bg-gray-100 text-gray-500', reserved: 'bg-amber-100 text-amber-700' };
-  const labels: Record<string, string> = { active: 'Активный', checked_out: 'Выселен', reserved: 'Забронирован' };
+  const labels: Record<string, string> = { active: t('Активный'), checked_out: t('Выселен'), reserved: t('Забронирован') };
   return <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${styles[status] || styles.active}`}>{labels[status] || status}</span>;
 }
 
 function PaymentStatus({ status }: { status: string }) {
+  const { t } = useLanguage();
   const styles: Record<string, string> = { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', overdue: 'bg-red-100 text-red-700' };
-  const labels: Record<string, string> = { paid: 'Oplacone', pending: 'Oczekuje', overdue: 'Zalegla' };
+  const labels: Record<string, string> = { paid: t('Оплачено'), pending: t('Ожидает'), overdue: t('Просрочено') };
   return <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${styles[status] || ''}`}>{labels[status] || status}</span>;
 }
 
@@ -1413,12 +1427,12 @@ function EmptyState({ text }: { text: string }) {
 }
 
 function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
+  const { t, monthFull, dayNames } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-  const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const monthNames = monthFull;
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
@@ -1446,8 +1460,8 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h3 className="font-semibold text-gray-900">Календарь загрузки</h3>
-          <p className="text-sm text-gray-400 mt-0.5">Средняя загрузка: <span className="font-medium text-gray-600">{avgOccupancy}%</span></p>
+          <h3 className="font-semibold text-gray-900">{t('Календарь загрузки')}</h3>
+          <p className="text-sm text-gray-400 mt-0.5">{t('Средняя загрузка: {n}%', { n: avgOccupancy })}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors text-sm font-bold">{'<'}</button>
@@ -1493,7 +1507,7 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
       </div>
 
       <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <h4 className="font-semibold text-gray-900 text-sm mb-4">Oblozenie wg pokoi</h4>
+        <h4 className="font-semibold text-gray-900 text-sm mb-4">{t('Загрузка по номерам')}</h4>
         <div className="space-y-3">
           {rooms.map(room => ({
             room,
@@ -1521,11 +1535,11 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
           <div className="space-y-5">
             <div>
               <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Заселения
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('Заселения')}
               </h4>
               {(() => {
                 const checkins = guests.filter(g => g.checkIn === selectedDate);
-                if (checkins.length === 0) return <p className="text-sm text-gray-400">Нет заселений</p>;
+                if (checkins.length === 0) return <p className="text-sm text-gray-400">{t('Нет заселений')}</p>;
                 return (
                   <div className="space-y-2">
                     {checkins.map(g => {
@@ -1537,7 +1551,7 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{g.name}</p>
-                            <p className="text-xs text-gray-400">Номер {room?.number || '—'}</p>
+                            <p className="text-xs text-gray-400">{t('Номер {n}', { n: room?.number || '—' })}</p>
                           </div>
                         </Link>
                       );
@@ -1548,11 +1562,11 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500" /> Выселения
+                <span className="w-2 h-2 rounded-full bg-rose-500" /> {t('Выселения')}
               </h4>
               {(() => {
                 const checkouts = guests.filter(g => g.checkOut === selectedDate);
-                if (checkouts.length === 0) return <p className="text-sm text-gray-400">Нет выселений</p>;
+                if (checkouts.length === 0) return <p className="text-sm text-gray-400">{t('Нет выселений')}</p>;
                 return (
                   <div className="space-y-2">
                     {checkouts.map(g => {
@@ -1564,7 +1578,7 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{g.name}</p>
-                            <p className="text-xs text-gray-400">Номер {room?.number || '—'}</p>
+                            <p className="text-xs text-gray-400">{t('Номер {n}', { n: room?.number || '—' })}</p>
                           </div>
                         </Link>
                       );
@@ -1581,8 +1595,9 @@ function OccupancyCalendar({ rooms, guests }: { rooms: any[]; guests: any[] }) {
 }
 
 function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guests: any[]; payments: any[]; totalBeds: number }) {
+  const { t, tp, monthShort } = useLanguage();
   const [monthsCount, setMonthsCount] = useState<number>(12);
-  const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+  const monthNamesShort = monthShort;
 
   const allMonths = new Set<string>();
   payments.forEach(p => {
@@ -1670,17 +1685,17 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">Аналитика</h3>
-            <p className="text-sm text-gray-400 mt-0.5">Сводка доходов и размещения за {sortedMonths.length} мес.</p>
+            <h3 className="font-semibold text-gray-900">{t('Аналитика')}</h3>
+            <p className="text-sm text-gray-400 mt-0.5">{t('Сводка доходов и размещения за {n} мес.', { n: sortedMonths.length })}</p>
           </div>
           <div className="flex items-center gap-2">
             <BarChart3 size={16} className="text-gray-400" />
             <select value={monthsCount} onChange={e => setMonthsCount(Number(e.target.value))} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value={3}>3 мес.</option>
-              <option value={6}>6 мес.</option>
-              <option value={12}>12 мес.</option>
-              <option value={24}>24 мес.</option>
-              <option value={999}>Все</option>
+              <option value={3}>{t('3 мес.')}</option>
+              <option value={6}>{t('6 мес.')}</option>
+              <option value={12}>{t('12 мес.')}</option>
+              <option value={24}>{t('24 мес.')}</option>
+              <option value={999}>{t('Все')}</option>
             </select>
           </div>
         </div>
@@ -1688,42 +1703,42 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div className="bg-emerald-50 rounded-xl p-4">
-          <p className="text-xs text-emerald-600 font-medium mb-1">Оплачено</p>
+          <p className="text-xs text-emerald-600 font-medium mb-1">{t('Оплачено')}</p>
           <p className="text-xl font-bold text-emerald-700">{totalPaid.toLocaleString()} зл</p>
-          <p className="text-[10px] text-emerald-500 mt-1">{payments.filter(p => p.status === 'paid').length} платежей</p>
+          <p className="text-[10px] text-emerald-500 mt-1">{tp(payments.filter(p => p.status === 'paid').length, ['{n} платеж', '{n} платежа', '{n} платежей'])}</p>
         </div>
         <div className="bg-amber-50 rounded-xl p-4">
-          <p className="text-xs text-amber-600 font-medium mb-1">Ожидает</p>
+          <p className="text-xs text-amber-600 font-medium mb-1">{t('Ожидает')}</p>
           <p className="text-xl font-bold text-amber-700">{totalPending.toLocaleString()} зл</p>
-          <p className="text-[10px] text-amber-500 mt-1">{payments.filter(p => p.status === 'pending').length} платежей</p>
+          <p className="text-[10px] text-amber-500 mt-1">{tp(payments.filter(p => p.status === 'pending').length, ['{n} платеж', '{n} платежа', '{n} платежей'])}</p>
         </div>
         <div className="bg-red-50 rounded-xl p-4">
-          <p className="text-xs text-red-600 font-medium mb-1">Просрочено</p>
+          <p className="text-xs text-red-600 font-medium mb-1">{t('Просрочено')}</p>
           <p className="text-xl font-bold text-red-700">{totalOverdue.toLocaleString()} зл</p>
-          <p className="text-[10px] text-red-500 mt-1">{payments.filter(p => p.status === 'overdue').length} платежей</p>
+          <p className="text-[10px] text-red-500 mt-1">{tp(payments.filter(p => p.status === 'overdue').length, ['{n} платеж', '{n} платежа', '{n} платежей'])}</p>
         </div>
         <div className="bg-indigo-50 rounded-xl p-4">
-          <p className="text-xs text-indigo-600 font-medium mb-1">Средняя цена за ночь</p>
+          <p className="text-xs text-indigo-600 font-medium mb-1">{t('Средняя цена за ночь')}</p>
           <p className="text-xl font-bold text-indigo-700">{avgRate} зл</p>
-          <p className="text-[10px] text-indigo-500 mt-1">{totalNights} ночлегов</p>
+          <p className="text-[10px] text-indigo-500 mt-1">{tp(totalNights, ['{n} ночлег', '{n} ночлега', '{n} ночлегов'])}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
-          <p className="text-xs text-gray-400 font-medium mb-1">Общий доход</p>
+          <p className="text-xs text-gray-400 font-medium mb-1">{t('Общий доход')}</p>
           <p className="text-lg font-bold text-gray-900">{totalRevenue.toLocaleString()} зл</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
-          <p className="text-xs text-gray-400 font-medium mb-1">Средняя загрузка</p>
+          <p className="text-xs text-gray-400 font-medium mb-1">{t('Средняя загрузка')}</p>
           <p className="text-lg font-bold text-gray-900">{avgOccupancy}%</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
-          <p className="text-xs text-gray-400 font-medium mb-1">Всего гостей</p>
+          <p className="text-xs text-gray-400 font-medium mb-1">{t('Всего гостей')}</p>
           <p className="text-lg font-bold text-gray-900">{totalGuests}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
-          <p className="text-xs text-gray-400 font-medium mb-1">Кроватей</p>
+          <p className="text-xs text-gray-400 font-medium mb-1">{t('Кроватей')}</p>
           <p className="text-lg font-bold text-gray-900">{totalBeds}</p>
         </div>
       </div>
@@ -1731,14 +1746,14 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 p-5">
         <div className="flex items-center gap-2 mb-5">
           <DollarSign size={16} className="text-emerald-500" />
-          <h4 className="font-semibold text-gray-900 text-sm">Доходы по месяцам</h4>
+          <h4 className="font-semibold text-gray-900 text-sm">{t('Доходы по месяцам')}</h4>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-4 text-xs">
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-400" />Оплачено</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" />Ожидает</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-400" />Просрочено</span>
-          <span className="flex items-center gap-1.5"><span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-indigo-500" />Кумулятивно</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-400" />{t('Оплачено')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" />{t('Ожидает')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-400" />{t('Просрочено')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-indigo-500" />{t('Кумулятивно')}</span>
         </div>
 
         <div className="overflow-x-auto -mx-5 px-5">
@@ -1783,9 +1798,9 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
                       <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ transition: 'opacity 0.15s' }}>
                         <rect x={cx - 85} y={Math.max(chartBottom - totalH - 64, 2)} width={170} height={e.paid > 0 && e.pending > 0 && e.overdue > 0 ? 72 : e.total === 0 ? 26 : 56} rx={6} fill="#1f2937" />
                         <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + 17} textAnchor="middle" fill="white" style={{ fontSize: 11, fontWeight: 600 }}>{monthLabel}</text>
-                        {e.paid > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + 34} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>Оплачено: {e.paid.toLocaleString()} зл</text>}
-                        {e.pending > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + (e.paid > 0 ? 51 : 34)} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>Ожидает: {e.pending.toLocaleString()} зл</text>}
-                        {e.overdue > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + (e.paid > 0 ? (e.pending > 0 ? 68 : 51) : (e.pending > 0 ? 51 : 34))} textAnchor="middle" fill="#f87171" style={{ fontSize: 10 }}>Просрочено: {e.overdue.toLocaleString()} зл</text>}
+                        {e.paid > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + 34} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>{t('Оплачено: {v} зл', { v: e.paid.toLocaleString() })}</text>}
+                        {e.pending > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + (e.paid > 0 ? 51 : 34)} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>{t('Ожидает: {v} зл', { v: e.pending.toLocaleString() })}</text>}
+                        {e.overdue > 0 && <text x={cx} y={Math.max(chartBottom - totalH - 64, 2) + (e.paid > 0 ? (e.pending > 0 ? 68 : 51) : (e.pending > 0 ? 51 : 34))} textAnchor="middle" fill="#f87171" style={{ fontSize: 10 }}>{t('Просрочено: {v} зл', { v: e.overdue.toLocaleString() })}</text>}
                       </g>
                     </g>
                   );
@@ -1812,24 +1827,24 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
         </div>
 
         <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-center">
-          <div className="bg-emerald-50 rounded-lg p-2"><p className="text-[10px] text-emerald-600">Оплачено</p><p className="text-sm font-bold text-emerald-700">{totalPaid.toLocaleString()} зл</p></div>
-          <div className="bg-amber-50 rounded-lg p-2"><p className="text-[10px] text-amber-600">Ожидает</p><p className="text-sm font-bold text-amber-700">{totalPending.toLocaleString()} зл</p></div>
-          <div className="bg-red-50 rounded-lg p-2"><p className="text-[10px] text-red-600">Просрочено</p><p className="text-sm font-bold text-red-700">{totalOverdue.toLocaleString()} зл</p></div>
-          <div className="bg-indigo-50 rounded-lg p-2"><p className="text-[10px] text-indigo-600">Кумулятивно</p><p className="text-sm font-bold text-indigo-700">{totalPaid.toLocaleString()} зл</p></div>
+          <div className="bg-emerald-50 rounded-lg p-2"><p className="text-[10px] text-emerald-600">{t('Оплачено')}</p><p className="text-sm font-bold text-emerald-700">{totalPaid.toLocaleString()} зл</p></div>
+          <div className="bg-amber-50 rounded-lg p-2"><p className="text-[10px] text-amber-600">{t('Ожидает')}</p><p className="text-sm font-bold text-amber-700">{totalPending.toLocaleString()} зл</p></div>
+          <div className="bg-red-50 rounded-lg p-2"><p className="text-[10px] text-red-600">{t('Просрочено')}</p><p className="text-sm font-bold text-red-700">{totalOverdue.toLocaleString()} зл</p></div>
+          <div className="bg-indigo-50 rounded-lg p-2"><p className="text-[10px] text-indigo-600">{t('Кумулятивно')}</p><p className="text-sm font-bold text-indigo-700">{totalPaid.toLocaleString()} зл</p></div>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 p-5">
         <div className="flex items-center gap-2 mb-5">
           <Users size={16} className="text-indigo-500" />
-          <h4 className="font-semibold text-gray-900 text-sm">Размещение по месяцам</h4>
+          <h4 className="font-semibold text-gray-900 text-sm">{t('Размещение по месяцам')}</h4>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-4 text-xs">
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-indigo-400" />Ночлеги</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-400" />Заселения</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" />Выселения</span>
-          <span className="flex items-center gap-1.5"><span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-red-500" />Средняя загрузка</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-indigo-400" />{t('Ночлеги')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-400" />{t('Заселения')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" />{t('Выселения')}</span>
+          <span className="flex items-center gap-1.5"><span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-red-500" />{t('Средняя загрузка')}</span>
         </div>
 
         <div className="overflow-x-auto -mx-5 px-5">
@@ -1883,9 +1898,9 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
                       <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ transition: 'opacity 0.15s' }}>
                         <rect x={cx - 60} y={Math.max(chartBottom - nightsH - 66, 2)} width={120} height={72} rx={6} fill="#1f2937" />
                         <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 17} textAnchor="middle" fill="white" style={{ fontSize: 11, fontWeight: 600 }}>{monthLabel}</text>
-                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 34} textAnchor="middle" fill="#818cf8" style={{ fontSize: 10 }}>Ночлеги: {o.guestNights}</text>
-                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 51} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>Заселения: {o.checkins}</text>
-                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 68} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>Выселения: {o.checkouts}</text>
+                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 34} textAnchor="middle" fill="#818cf8" style={{ fontSize: 10 }}>{t('Ночлеги: {n}', { n: o.guestNights })}</text>
+                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 51} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>{t('Заселения: {n}', { n: o.checkins })}</text>
+                        <text x={cx} y={Math.max(chartBottom - nightsH - 66, 2) + 68} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>{t('Выселения: {n}', { n: o.checkouts })}</text>
                       </g>
                     </g>
                   );
@@ -1898,10 +1913,10 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
         </div>
 
         <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-center">
-          <div className="bg-indigo-50 rounded-lg p-2"><p className="text-[10px] text-indigo-600">Ночлеги</p><p className="text-sm font-bold text-indigo-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].guestNights, 0)}</p></div>
-          <div className="bg-emerald-50 rounded-lg p-2"><p className="text-[10px] text-emerald-600">Заселения</p><p className="text-sm font-bold text-emerald-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].checkins, 0)}</p></div>
-          <div className="bg-amber-50 rounded-lg p-2"><p className="text-[10px] text-amber-600">Выселения</p><p className="text-sm font-bold text-amber-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].checkouts, 0)}</p></div>
-          <div className="bg-red-50 rounded-lg p-2"><p className="text-[10px] text-red-600">Средняя загрузка</p><p className="text-sm font-bold text-red-700">{avgOccupancy}%</p></div>
+          <div className="bg-indigo-50 rounded-lg p-2"><p className="text-[10px] text-indigo-600">{t('Ночлеги')}</p><p className="text-sm font-bold text-indigo-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].guestNights, 0)}</p></div>
+          <div className="bg-emerald-50 rounded-lg p-2"><p className="text-[10px] text-emerald-600">{t('Заселения')}</p><p className="text-sm font-bold text-emerald-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].checkins, 0)}</p></div>
+          <div className="bg-amber-50 rounded-lg p-2"><p className="text-[10px] text-amber-600">{t('Выселения')}</p><p className="text-sm font-bold text-amber-700">{sortedMonths.reduce((s, m) => s + occupancyByMonth[m].checkouts, 0)}</p></div>
+          <div className="bg-red-50 rounded-lg p-2"><p className="text-[10px] text-red-600">{t('Средняя загрузка')}</p><p className="text-sm font-bold text-red-700">{avgOccupancy}%</p></div>
         </div>
       </div>
 
@@ -1914,6 +1929,7 @@ function Analytics({ rooms, guests, payments, totalBeds }: { rooms: any[]; guest
 
 function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: string }) {
   const { rooms, guests, addGuest } = useData();
+  const { t } = useLanguage();
   const hostelRooms = rooms.filter(r => r.hostelId === hostelId && roomOccupiedBeds(r.id, guests) < r.beds);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -1935,56 +1951,56 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
-        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('Ян Ковальски')} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
           <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="jan@email.com" />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Паспорт / ID')}</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Язык общения')}</label>
         <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Не указан</option>
+          <option value="">{t('Не указан')}</option>
           {GUEST_LANGUAGES.map(l => (
-            <option key={l.value} value={l.value}>{l.label}</option>
+            <option key={l.value} value={l.value}>{t(l.label)}</option>
           ))}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Комната</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Комната')}</label>
         <select required value={roomId} onChange={e => setRoomId(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           {hostelRooms.map(r => {
             const occ = roomOccupiedBeds(r.id, guests);
             return (
-              <option key={r.id} value={r.id}>{r.number} · {r.type} · {r.beds - occ} свободных · {r.pricePerBed} зл/кровать</option>
+              <option key={r.id} value={r.id}>{t('{n} · {type} · {free} свободных · {price} зл/кровать', { n: r.number, type: r.type, free: r.beds - occ, price: r.pricePerBed })}</option>
             );
           })}
         </select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Заселение')}</label>
           <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение')}</label>
           <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
-        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Добавить</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>
       </div>
     </form>
   );

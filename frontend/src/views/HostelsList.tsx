@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, ArrowUpRight, Plus, Trash2, Image } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { hostelOccupiedBeds } from '../utils/helpers';
 import Modal from '../components/Modal';
 import type { Room } from '../types';
@@ -20,6 +21,7 @@ function emptyRoom(): FormRoom {
 
 export default function HostelsList() {
   const { hostels, guests, addHostel } = useData();
+  const { t, tp } = useLanguage();
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -62,14 +64,14 @@ export default function HostelsList() {
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Хостелы</h1>
-          <p className="text-gray-500 mt-1">{hostels.length} хостелов</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Хостелы')}</h1>
+          <p className="text-gray-500 mt-1">{tp(hostels.length, ['{n} хостел', '{n} хостела', '{n} хостелов'])}</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
-          <Plus size={16} /> Добавить хостел
+          <Plus size={16} /> {t('Добавить хостел')}
         </button>
       </div>
 
@@ -95,34 +97,34 @@ export default function HostelsList() {
               {(h.floors !== undefined || h.parking) && (
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {h.floors !== undefined && (
-                    <span className="text-[11px] font-medium bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{h.floors} эт.</span>
+                    <span className="text-[11px] font-medium bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{t('{n} эт.', { n: h.floors })}</span>
                   )}
                   {h.parking && (
-                    <span className="text-[11px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Парковка</span>
+                    <span className="text-[11px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded">{t('Парковка')}</span>
                   )}
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Номера</p>
+                  <p className="text-xs text-gray-400 mb-1">{t('Номера')}</p>
                   <p className="font-semibold text-gray-900">{h.totalRooms}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Занятые кровати</p>
+                  <p className="text-xs text-gray-400 mb-1">{t('Занятые кровати')}</p>
                   <p className="font-semibold text-gray-900">{occupied}/{h.totalBeds}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Гости</p>
+                  <p className="text-xs text-gray-400 mb-1">{t('Гости')}</p>
                   <p className="font-semibold text-gray-900">{hostelGuests.length}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Доход</p>
+                  <p className="text-xs text-gray-400 mb-1">{t('Доход')}</p>
                   <p className="font-semibold text-gray-900">{(h.monthlyRevenue / 1000).toFixed(1)}k zl</p>
                 </div>
               </div>
               <div className="mt-4">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-gray-400">Загрузка</span>
+                  <span className="text-gray-400">{t('Загрузка')}</span>
                   <span className="font-medium text-gray-600">{occupancy}%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
@@ -134,32 +136,32 @@ export default function HostelsList() {
         })}
       </div>
 
-      <Modal isOpen={showAdd} onClose={() => { resetForm(); setShowAdd(false); }} title="Добавить хостел">
+      <Modal isOpen={showAdd} onClose={() => { resetForm(); setShowAdd(false); }} title={t('Добавить хостел')}>
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('Название *')}</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="напр. Хостел Краков Центр"
+              placeholder={t('напр. Хостел Краков Центр')}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Адрес</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('Адрес')}</label>
             <input
               type="text"
               value={address}
               onChange={e => setAddress(e.target.value)}
-              placeholder="напр. ул. Флорианская 10, Краков"
+              placeholder={t('напр. ул. Флорианская 10, Краков')}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Фото (URL)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('Фото (URL)')}</label>
             <div className="flex gap-2">
               <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl">
                 <Image size={14} className="text-gray-400 shrink-0" />
@@ -176,25 +178,25 @@ export default function HostelsList() {
 
           <div className="border-t border-gray-100 pt-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-700">Номера</h3>
+              <h3 className="text-sm font-medium text-gray-700">{t('Номера')}</h3>
               <button
                 type="button"
                 onClick={addRoomRow}
                 className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                <Plus size={14} /> Добавить номер
+                <Plus size={14} /> {t('Добавить номер')}
               </button>
             </div>
 
             {rooms.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-3">Нет номеров — нажмите "Добавить номер" чтобы начать</p>
+              <p className="text-xs text-gray-400 text-center py-3">{t('Нет номеров — нажмите "Добавить номер" чтобы начать')}</p>
             )}
 
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {rooms.map((room, i) => (
                 <div key={i} className="bg-gray-50 rounded-xl p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-400">Номер {i + 1}</span>
+                    <span className="text-xs font-medium text-gray-400">{t('Номер {n}', { n: i + 1 })}</span>
                     {rooms.length > 1 && (
                       <button type="button" onClick={() => removeRoomRow(i)} className="text-red-400 hover:text-red-600 transition-colors">
                         <Trash2 size={14} />
@@ -203,7 +205,7 @@ export default function HostelsList() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-0.5">Номер *</label>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{t('Номер *')}</label>
                       <input
                         type="text"
                         value={room.number}
@@ -213,7 +215,7 @@ export default function HostelsList() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-0.5">Этаж</label>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{t('Этаж')}</label>
                       <input
                         type="number"
                         value={room.floor}
@@ -225,7 +227,7 @@ export default function HostelsList() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-0.5">Кровати</label>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{t('Кровати')}</label>
                       <input
                         type="number"
                         value={room.beds}
@@ -235,7 +237,7 @@ export default function HostelsList() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-0.5">Тип</label>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{t('Тип')}</label>
                       <select
                         value={room.type}
                         onChange={e => updateRoom(i, 'type', e.target.value)}
@@ -248,7 +250,7 @@ export default function HostelsList() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] text-gray-400 mb-0.5">Цена за кровать / сутки (zl)</label>
+                    <label className="block text-[11px] text-gray-400 mb-0.5">{t('Цена за кровать / сутки (zl)')}</label>
                     <input
                       type="number"
                       value={room.pricePerBed}
@@ -267,14 +269,14 @@ export default function HostelsList() {
               onClick={() => { resetForm(); setShowAdd(false); }}
               className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
             >
-              Отмена
+              {t('Отмена')}
             </button>
             <button
               onClick={handleSave}
               disabled={!name.trim()}
               className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Сохранить
+              {t('Сохранить')}
             </button>
           </div>
         </div>

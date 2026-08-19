@@ -3,12 +3,14 @@ import { User, Building2, Bell, Lock, Save, Check } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { changePassword } from '../api';
 import PasswordInput from '../components/PasswordInput';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type Tab = 'profile' | 'hostels' | 'notifications' | 'security';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
+  const { t } = useLanguage();
 
   const handleSave = () => {
     setSaved(true);
@@ -16,25 +18,25 @@ export default function Settings() {
   };
 
   const tabs: { key: Tab; icon: React.ReactNode; label: string }[] = [
-    { key: 'profile', icon: <User size={18} />, label: 'Профиль' },
-    { key: 'hostels', icon: <Building2 size={18} />, label: 'Хостелы' },
-    { key: 'notifications', icon: <Bell size={18} />, label: 'Уведомления' },
-    { key: 'security', icon: <Lock size={18} />, label: 'Безопасность' },
+    { key: 'profile', icon: <User size={18} />, label: t('Профиль') },
+    { key: 'hostels', icon: <Building2 size={18} />, label: t('Хостелы') },
+    { key: 'notifications', icon: <Bell size={18} />, label: t('Уведомления') },
+    { key: 'security', icon: <Lock size={18} />, label: t('Безопасность') },
   ];
 
   return (
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Настройки</h1>
-          <p className="text-gray-500 mt-1">Управление аккаунтом и настройками</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Настройки')}</h1>
+          <p className="text-gray-500 mt-1">{t('Управление аккаунтом и настройками')}</p>
         </div>
         <button
           onClick={handleSave}
           className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
         >
           {saved ? <Check size={18} /> : <Save size={18} />}
-          {saved ? 'Сохранено!' : 'Сохранить изменения'}
+          {saved ? t('Сохранено!') : t('Сохранить изменения')}
         </button>
       </div>
 
@@ -75,50 +77,67 @@ function ProfileTab() {
   const [phone, setPhone] = useState('+48 500 100 200');
   const [company, setCompany] = useState('Kowalski Hostels Sp. z o.o.');
   const [nip, setNip] = useState('PL 1234567890');
+  const { t, lang, setLang } = useLanguage();
 
   return (
     <div className="space-y-6">
-      <Card title="Личные данные" subtitle="Основная информация">
+      <Card title={t('Личные данные')} subtitle={t('Основная информация')}>
         <div className="flex items-center gap-6 mb-6">
           <div className="w-20 h-20 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl font-bold">
             AK
           </div>
           <div>
             <button className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
-              Изменить фото
+              {t('Изменить фото')}
             </button>
-            <p className="text-xs text-gray-400 mt-2">JPG, PNG. Макс. 2МБ</p>
+            <p className="text-xs text-gray-400 mt-2">{t('JPG, PNG. Макс. 2МБ')}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Имя и фамилия" value={name} onChange={setName} />
-          <Field label="Email" value={email} onChange={setEmail} type="email" />
-          <Field label="Телефон" value={phone} onChange={setPhone} type="tel" />
-          <Field label="Компания" value={company} onChange={setCompany} />
+          <Field label={t('Имя и фамилия')} value={name} onChange={setName} />
+          <Field label={t('Email')} value={email} onChange={setEmail} type="email" />
+          <Field label={t('Телефон')} value={phone} onChange={setPhone} type="tel" />
+          <Field label={t('Компания')} value={company} onChange={setCompany} />
         </div>
         <div className="mt-4">
           <Field label="NIP" value={nip} onChange={setNip} />
         </div>
       </Card>
 
-      <Card title="Валюта" subtitle="Настройки валюты в системе">
+      <Card title={t('Язык интерфейса')} subtitle={t('Выберите язык для отображения интерфейса')}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Валюта</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Язык')}</label>
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value as 'ru' | 'uk')}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="ru">{t('Русский')}</option>
+              <option value="uk">{t('Украинский')}</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      <Card title={t('Валюта')} subtitle={t('Настройки валюты в системе')}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Валюта')}</label>
             <select defaultValue="PLN" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="PLN">PLN - Польский злотый</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="USD">USD - Американский доллар</option>
-              <option value="CZK">CZK - Чешская крона</option>
-              <option value="GBP">GBP - Британский фунт</option>
+              <option value="PLN">{t('PLN - Польский злотый')}</option>
+              <option value="EUR">{t('EUR - Euro')}</option>
+              <option value="USD">{t('USD - Американский доллар')}</option>
+              <option value="CZK">{t('CZK - Чешская крона')}</option>
+              <option value="GBP">{t('GBP - Британский фунт')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Формат цены</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Формат цены')}</label>
             <select defaultValue="symbol_after" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="symbol_after">120 zl</option>
-              <option value="symbol_before">zl 120</option>
-              <option value="space">120 zl</option>
+              <option value="symbol_after">120 зл</option>
+              <option value="symbol_before">зл 120</option>
+              <option value="space">120 зл</option>
             </select>
           </div>
         </div>
@@ -129,6 +148,7 @@ function ProfileTab() {
 
 function HostelsTab() {
   const { hostels, rooms, updateRoomPrices } = useData();
+  const { t, tp } = useLanguage();
   const [expandedHostel, setExpandedHostel] = useState<string | null>(hostels[0]?.id || null);
   const [localPrices, setLocalPrices] = useState<Record<string, Record<string, number>>>(() => {
     const prices: Record<string, Record<string, number>> = {};
@@ -159,12 +179,12 @@ function HostelsTab() {
     setTimeout(() => setSavedHostel(null), 1500);
   };
 
-  const typeLabels: Record<string, string> = { standard: 'Standard', economy: 'Economy', vip: 'VIP' };
+  const typeLabels: Record<string, string> = { standard: t('Стандарт'), economy: t('Эконом'), vip: 'VIP' };
   const typeColors: Record<string, string> = { standard: 'bg-indigo-100 text-indigo-700', economy: 'bg-gray-100 text-gray-600', vip: 'bg-amber-100 text-amber-700' };
 
   return (
     <div className="space-y-6">
-      <Card title="Цены номеров по хостелам" subtitle="Установите цены за кровать для каждого хостела и типа номера">
+      <Card title={t('Цены номеров по хостелам')} subtitle={t('Установите цены за кровать для каждого хостела и типа номера')}>
         <div className="space-y-3">
           {hostels.map(h => {
             const isOpen = expandedHostel === h.id;
@@ -184,14 +204,14 @@ function HostelsTab() {
                     </div>
                     <div className="text-left">
                       <p className="font-medium text-gray-900">{h.name}</p>
-                      <p className="text-sm text-gray-400">{h.address} · {roomCount} номеров</p>
+                      <p className="text-sm text-gray-400">{h.address} · {tp(roomCount, ['{n} номер', '{n} номера', '{n} номеров'])}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1.5">
                       {types.map(t => (
                         <span key={t} className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${typeColors[t]}`}>
-                          {t} {localPrices[h.id]?.[t] || 0} zl
+                          {t} {localPrices[h.id]?.[t] || 0} зл
                         </span>
                       ))}
                     </div>
@@ -212,14 +232,14 @@ function HostelsTab() {
                           <div key={type} className="bg-white rounded-xl p-4 border border-gray-200">
                             <div className="flex items-center justify-between mb-3">
                               <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${typeColors[type]}`}>{typeLabels[type]}</span>
-                              <span className="text-xs text-gray-400">{roomsOfType.length} номеров</span>
+                              <span className="text-xs text-gray-400">{tp(roomsOfType.length, ['{n} номер', '{n} номера', '{n} номеров'])}</span>
                             </div>
                             <div className="mb-3">
-                              <p className="text-xs text-gray-400">Текущий диапазон</p>
+                              <p className="text-xs text-gray-400">{t('Текущий диапазон')}</p>
                               <p className="text-sm font-medium text-gray-700">{minPrice === maxPrice ? `${minPrice} зл/кровать` : `${minPrice}–${maxPrice} зл/кровать`}</p>
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Новая цена (зл/кровать)</label>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">{t('Новая цена (зл/кровать)')}</label>
                               <input
                                 type="number"
                                 value={localPrices[h.id]?.[type] || ''}
@@ -230,7 +250,7 @@ function HostelsTab() {
                                 onClick={() => savePrices(h.id, type)}
                                 className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all ${isSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                               >
-                                {isSaved ? <Check size={16} className="mx-auto" /> : 'Сохранить'}
+                                {isSaved ? <Check size={16} className="mx-auto" /> : t('Сохранить')}
                               </button>
                             </div>
                           </div>
@@ -245,15 +265,15 @@ function HostelsTab() {
         </div>
       </Card>
 
-      <Card title="Сводка цен" subtitle="Краткий обзор текущих тарифов">
+      <Card title={t('Сводка цен')} subtitle={t('Краткий обзор текущих тарифов')}>
         <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-xl border border-gray-100">
           <table className="w-full text-sm min-w-[400px]">
             <thead>
               <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-3 font-medium text-gray-400">Хостел</th>
-                <th className="px-4 py-3 font-medium text-gray-400">Standard</th>
-                <th className="px-4 py-3 font-medium text-gray-400">Economy</th>
+                <th className="px-4 py-3 font-medium text-gray-400">{t('Хостел')}</th>
+                <th className="px-4 py-3 font-medium text-gray-400">{t('Стандарт')}</th>
+                <th className="px-4 py-3 font-medium text-gray-400">{t('Эконом')}</th>
                 <th className="px-4 py-3 font-medium text-gray-400">VIP</th>
               </tr>
             </thead>
@@ -264,7 +284,7 @@ function HostelsTab() {
                   const filtered = hostelRooms.filter(r => r.type === type);
                   if (filtered.length === 0) return '-';
                   const avg = Math.round(filtered.reduce((s, r) => s + r.pricePerBed, 0) / filtered.length);
-                  return `${avg} zl`;
+                  return `${avg} зл`;
                 };
                 return (
                   <tr key={h.id} className="hover:bg-gray-50">
@@ -291,27 +311,28 @@ function NotificationsTab() {
   const [checkoutAlert, setCheckoutAlert] = useState(true);
   const [weeklyReport, setWeeklyReport] = useState(true);
   const [monthlyReport, setMonthlyReport] = useState(true);
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
-      <Card title="Каналы уведомлений" subtitle="Выберите способ получения уведомлений">
+      <Card title={t('Каналы уведомлений')} subtitle={t('Выберите способ получения уведомлений')}>
         <div className="space-y-4">
-          <Toggle label="Уведомления по email" description="Получайте уведомления на адрес электронной почты" checked={emailNotif} onChange={setEmailNotif} />
-          <Toggle label="SMS уведомления" description="Получайте SMS о важных событиях" checked={smsNotif} onChange={setSmsNotif} />
+          <Toggle label={t('Уведомления по email')} description={t('Получайте уведомления на адрес электронной почты')} checked={emailNotif} onChange={setEmailNotif} />
+          <Toggle label={t('SMS уведомления')} description={t('Получайте SMS о важных событиях')} checked={smsNotif} onChange={setSmsNotif} />
         </div>
       </Card>
 
-      <Card title="Оповещения" subtitle="Что вы хотите отслеживать">
+      <Card title={t('Оповещения')} subtitle={t('Что вы хотите отслеживать')}>
         <div className="space-y-4">
-          <Toggle label="Оповещения о долгах" description="Уведомление, когда гость имеет неоплаченный долг" checked={debtAlert} onChange={setDebtAlert} />
-          <Toggle label="Напоминания о выезде" description="Уведомление за 24 часа до planned checkout" checked={checkoutAlert} onChange={setCheckoutAlert} />
+          <Toggle label={t('Оповещения о долгах')} description={t('Уведомление, когда гость имеет неоплаченный долг')} checked={debtAlert} onChange={setDebtAlert} />
+          <Toggle label={t('Напоминания о выезде')} description={t('Уведомление за 24 часа до planned checkout')} checked={checkoutAlert} onChange={setCheckoutAlert} />
         </div>
       </Card>
 
-      <Card title="Отчёты" subtitle="Автоматические отчёты">
+      <Card title={t('Отчёты')} subtitle={t('Автоматические отчёты')}>
         <div className="space-y-4">
-          <Toggle label="Еженедельный отчёт" description="Сводка каждый понедельник утром" checked={weeklyReport} onChange={setWeeklyReport} />
-          <Toggle label="Ежемесячный отчёт" description="Полный отчёт 1-го числа каждого месяца" checked={monthlyReport} onChange={setMonthlyReport} />
+          <Toggle label={t('Еженедельный отчёт')} description={t('Сводка каждый понедельник утром')} checked={weeklyReport} onChange={setWeeklyReport} />
+          <Toggle label={t('Ежемесячный отчёт')} description={t('Полный отчёт 1-го числа каждого месяца')} checked={monthlyReport} onChange={setMonthlyReport} />
         </div>
       </Card>
     </div>
@@ -324,30 +345,31 @@ function SecurityTab() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useLanguage();
 
   const handlePasswordChange = async () => {
     setStatus(null);
     if (newPassword.length < 8) {
-      setStatus({ type: 'error', text: 'Новый пароль должен быть не короче 8 символов' });
+      setStatus({ type: 'error', text: t('Новый пароль должен быть не короче 8 символов') });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setStatus({ type: 'error', text: 'Пароли не совпадают' });
+      setStatus({ type: 'error', text: t('Пароли не совпадают') });
       return;
     }
     if (!currentPassword) {
-      setStatus({ type: 'error', text: 'Введите текущий пароль' });
+      setStatus({ type: 'error', text: t('Введите текущий пароль') });
       return;
     }
     setSubmitting(true);
     try {
       await changePassword(currentPassword, newPassword);
-      setStatus({ type: 'ok', text: 'Пароль успешно изменён' });
+      setStatus({ type: 'ok', text: t('Пароль успешно изменён') });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setStatus({ type: 'error', text: err instanceof Error ? err.message : 'Не удалось изменить пароль' });
+      setStatus({ type: 'error', text: err instanceof Error ? err.message : t('Не удалось изменить пароль') });
     } finally {
       setSubmitting(false);
     }
@@ -355,11 +377,11 @@ function SecurityTab() {
 
   return (
     <div className="space-y-6">
-      <Card title="Изменение пароля" subtitle="Обновите пароль от аккаунта">
+      <Card title={t('Изменение пароля')} subtitle={t('Обновите пароль от аккаунта')}>
         <div className="space-y-4 max-w-md">
-          <Field label="Текущий пароль" value={currentPassword} onChange={setCurrentPassword} type="password" autoComplete="current-password" />
-          <Field label="Новый пароль" value={newPassword} onChange={setNewPassword} type="password" autoComplete="new-password" />
-          <Field label="Подтвердите новый пароль" value={confirmPassword} onChange={setConfirmPassword} type="password" autoComplete="new-password" />
+          <Field label={t('Текущий пароль')} value={currentPassword} onChange={setCurrentPassword} type="password" autoComplete="current-password" />
+          <Field label={t('Новый пароль')} value={newPassword} onChange={setNewPassword} type="password" autoComplete="new-password" />
+          <Field label={t('Подтвердите новый пароль')} value={confirmPassword} onChange={setConfirmPassword} type="password" autoComplete="new-password" />
           {status && (
             <p className={`text-sm px-3 py-2 rounded-lg ${status.type === 'ok' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'}`}>{status.text}</p>
           )}
@@ -368,24 +390,24 @@ function SecurityTab() {
             disabled={submitting}
             className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
           >
-            {submitting ? 'Сохранение...' : 'Изменить пароль'}
+            {submitting ? t('Сохранение...') : t('Изменить пароль')}
           </button>
         </div>
       </Card>
 
-      <Card title="Двухфакторная аутентификация" subtitle="Добавьте дополнительную защиту аккаунта">
+      <Card title={t('Двухфакторная аутентификация')} subtitle={t('Добавьте дополнительную защиту аккаунта')}>
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
           <div>
-            <p className="font-medium text-gray-900">Мобильная авторизация</p>
-            <p className="text-sm text-gray-400">Используйте приложение Google Authenticator или Authy</p>
+            <p className="font-medium text-gray-900">{t('Мобильная авторизация')}</p>
+            <p className="text-sm text-gray-400">{t('Используйте приложение Google Authenticator или Authy')}</p>
           </div>
           <button className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
-            Включить
+            {t('Включить')}
           </button>
         </div>
       </Card>
 
-      <Card title="Активные сессии" subtitle="Управляйте устройствами, вошедшими в аккаунт">
+      <Card title={t('Активные сессии')} subtitle={t('Управляйте устройствами, вошедшими в аккаунт')}>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-3">
@@ -394,10 +416,10 @@ function SecurityTab() {
               </div>
               <div>
                 <p className="font-medium text-gray-900">MacBook Pro</p>
-                <p className="text-sm text-gray-400">Краков, Польша · Активна сейчас</p>
+                <p className="text-sm text-gray-400">{t('Краков, Польша · Активна сейчас')}</p>
               </div>
             </div>
-            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">Текущая</span>
+            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">{t('Текущая')}</span>
           </div>
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-3">
@@ -406,19 +428,19 @@ function SecurityTab() {
               </div>
               <div>
                 <p className="font-medium text-gray-900">iPhone 15</p>
-                <p className="text-sm text-gray-400">Гданьск, Польша · 2 дня назад</p>
+                <p className="text-sm text-gray-400">{t('Гданьск, Польша · 2 дня назад')}</p>
               </div>
             </div>
-            <button className="text-sm text-red-500 hover:text-red-600 font-medium">Выйти</button>
+            <button className="text-sm text-red-500 hover:text-red-600 font-medium">{t('Выйти')}</button>
           </div>
         </div>
       </Card>
 
       <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-        <h3 className="font-semibold text-red-700 mb-1">Опасная зона</h3>
-        <p className="text-sm text-red-500 mb-3">Эти операции необратимы.</p>
+        <h3 className="font-semibold text-red-700 mb-1">{t('Опасная зона')}</h3>
+        <p className="text-sm text-red-500 mb-3">{t('Эти операции необратимы.')}</p>
         <button className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors">
-          Удалить аккаунт
+          {t('Удалить аккаунт')}
         </button>
       </div>
     </div>

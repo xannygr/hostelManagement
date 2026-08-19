@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Phone, Mail, CreditCard, Calendar, MapPin, Edit3, AlertTriangle, CheckCircle2, Send, MessageSquare, X, Languages } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { Guest } from '../types';
 import { guestTotalPaid, guestTotalDue, guestLanguageLabel, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
@@ -10,12 +11,13 @@ import Modal from '../components/Modal';
 export default function GuestDetail() {
   const { id } = useParams<{ id: string }>();
   const { guests, rooms, hostels, payments, updateGuest, updatePayment } = useData();
+  const { t, monthFull, monthShort } = useLanguage();
   const guest = guests.find(g => g.id === id);
   const [showEdit, setShowEdit] = useState(false);
   const [smsSent, setSmsSent] = useState(false);
   const [smsPreview, setSmsPreview] = useState<{ text: string; paymentId?: string } | null>(null);
 
-  if (!guest) return <div className="p-8 text-center text-gray-400">Гость не найден</div>;
+  if (!guest) return <div className="p-8 text-center text-gray-400">{t('Гость не найден')}</div>;
 
   const room = rooms.find(r => r.id === guest.roomId);
   const hostel = hostels.find(h => h.id === guest.hostelId);
@@ -30,9 +32,9 @@ export default function GuestDetail() {
     const amount = p ? p.amount : computedTotalDue;
     const firstName = guest.name.split(' ')[0];
     if (!p) {
-      return `Уважаемый/ая ${firstName}, хостел ${hostel?.name || ''}. По всем вопросам обращайтесь к администратору.`;
+      return t('Уважаемый/ая {name}, хостел {hostel}. По всем вопросам обращайтесь к администратору.', { name: firstName, hostel: hostel?.name || '' });
     }
-    return `Уважаемый/ая ${firstName}, напоминаем об оплате в размере ${amount.toLocaleString()} зл, срок которой ${dueDate}. Хостел ${hostel?.name || ''}.`;
+    return t('Уважаемый/ая {name}, напоминаем об оплате в размере {amount} зл, срок которой {date}. Хостел {hostel}.', { name: firstName, amount: amount.toLocaleString(), date: dueDate, hostel: hostel?.name || '' });
   };
 
   const confirmSendSms = () => {
@@ -57,9 +59,6 @@ export default function GuestDetail() {
     setSmsPreview({ text: getSmsText(payment), paymentId });
   };
 
-  const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-  const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-
   const stayMonths: { key: string; label: string; shortLabel: string; year: number; month: number; status: 'paid' | 'overdue' | 'pending' | 'none'; payment?: any }[] = [];
   const checkInDate = new Date(guest.checkIn);
   const checkOutDate = new Date(guest.checkOut);
@@ -77,8 +76,8 @@ export default function GuestDetail() {
     const status = payment ? (payment.status as 'paid' | 'overdue' | 'pending') : 'none';
     stayMonths.push({
       key: monthKey,
-      label: `${monthNames[m]} ${y}`,
-      shortLabel: monthNamesShort[m],
+      label: `${monthFull[m]} ${y}`,
+      shortLabel: monthShort[m],
       year: y,
       month: m,
       status,
@@ -91,14 +90,14 @@ export default function GuestDetail() {
     <div className="p-4 sm:p-8">
       <Link href={`/hostel/${guest.hostelId}`} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <ArrowLeft size={16} />
-        Вернуться в {hostel?.name}
+        {t('Вернуться в {hostel}', { hostel: hostel?.name ?? '' })}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="col-span-1 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex justify-end mb-2">
-              <button onClick={() => setShowEdit(true)} className="w-9 h-9 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-indigo-100 hover:text-indigo-600 transition-colors" title="Редактировать">
+              <button onClick={() => setShowEdit(true)} className="w-9 h-9 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-indigo-100 hover:text-indigo-600 transition-colors" title={t('Редактировать')}>
                 <Edit3 size={16} />
               </button>
             </div>
@@ -108,25 +107,25 @@ export default function GuestDetail() {
               </div>
               <h1 className="text-xl font-bold text-gray-900">{guest.name}</h1>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${guest.status === 'active' ? 'bg-emerald-100 text-emerald-700' : guest.status === 'reserved' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                {guest.status === 'active' ? 'Активный жилец' : guest.status === 'reserved' ? 'Забронирован' : 'Выселен'}
+                {guest.status === 'active' ? t('Активный жилец') : guest.status === 'reserved' ? t('Забронирован') : t('Выселен')}
               </span>
             </div>
             <div className="space-y-4">
-              <InfoRow icon={<Phone size={18} />} label="Телефон" value={guest.phone || '-'} />
-              <InfoRow icon={<Mail size={18} />} label="Email" value={guest.email || '-'} />
-              <InfoRow icon={<CreditCard size={18} />} label="Паспорт" value={guest.passport || '-'} />
-              <InfoRow icon={<Languages size={18} />} label="Язык общения" value={guestLanguageLabel(guest.language)} />
+              <InfoRow icon={<Phone size={18} />} label={t('Телефон')} value={guest.phone || '-'} />
+              <InfoRow icon={<Mail size={18} />} label={t('Email')} value={guest.email || '-'} />
+              <InfoRow icon={<CreditCard size={18} />} label={t('Паспорт')} value={guest.passport || '-'} />
+              <InfoRow icon={<Languages size={18} />} label={t('Язык общения')} value={guestLanguageLabel(guest.language, t)} />
             </div>
             <div className="flex gap-3 mt-6">
               {guest.phone ? (
                 <a href={`tel:${guest.phone.replace(/\s/g, '')}`} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-200 transition-colors">
                   <Phone size={16} />
-                  Позвонить
+                  {t('Позвонить')}
                 </a>
               ) : (
-                <span className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-medium" title="Телефон не указан">
+                <span className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-medium" title={t('Телефон не указан')}>
                   <Phone size={16} />
-                  Позвонить
+                  {t('Позвонить')}
                 </span>
               )}
               <button
@@ -139,18 +138,18 @@ export default function GuestDetail() {
                 }`}
               >
                 {smsSent ? <CheckCircle2 size={16} /> : <MessageSquare size={16} />}
-                {smsSent ? 'Отправлено!' : 'Отправить SMS'}
+                {smsSent ? t('Отправлено!') : t('Отправить SMS')}
               </button>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Размещение</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">{t('Размещение')}</h3>
             <div className="space-y-4">
-              <InfoRow icon={<MapPin size={18} />} label="Хостел" value={hostel?.name || '-'} />
-              <InfoRow icon={<MapPin size={18} />} label="Номер" value={`${room?.number} · ${room?.type === 'standard' ? 'Standard' : room?.type === 'vip' ? 'VIP' : 'Economy'}`} />
-              <InfoRow icon={<Calendar size={18} />} label="Заезд" value={guest.checkIn} />
-              <InfoRow icon={<Calendar size={18} />} label="Выезд" value={guest.checkOut} />
+              <InfoRow icon={<MapPin size={18} />} label={t('Хостел')} value={hostel?.name || '-'} />
+              <InfoRow icon={<MapPin size={18} />} label={t('Номер')} value={`${room?.number} · ${room?.type === 'standard' ? 'Standard' : room?.type === 'vip' ? 'VIP' : 'Economy'}`} />
+              <InfoRow icon={<Calendar size={18} />} label={t('Заезд')} value={guest.checkIn} />
+              <InfoRow icon={<Calendar size={18} />} label={t('Выезд')} value={guest.checkOut} />
             </div>
           </div>
         </div>
@@ -158,17 +157,17 @@ export default function GuestDetail() {
         <div className="col-span-2 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-              <p className="text-sm text-gray-400 mb-1">Оплачено</p>
+              <p className="text-sm text-gray-400 mb-1">{t('Оплачено')}</p>
               <p className="text-2xl font-bold text-emerald-600">{computedTotalPaid.toLocaleString()} zl</p>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-              <p className="text-sm text-gray-400 mb-1">Задолженность</p>
+              <p className="text-sm text-gray-400 mb-1">{t('Задолженность')}</p>
               <p className={`text-2xl font-bold ${computedTotalDue > 0 ? 'text-red-500' : 'text-gray-900'}`}>{computedTotalDue.toLocaleString()} zl</p>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-              <p className="text-sm text-gray-400 mb-1">До выезда</p>
+              <p className="text-sm text-gray-400 mb-1">{t('До выезда')}</p>
               <p className="text-2xl font-bold text-gray-900">
-                {Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} дн.
+                {t('{n} дн.', { n: Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) })}
               </p>
             </div>
           </div>
@@ -176,18 +175,18 @@ export default function GuestDetail() {
           {guestPayments.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-gray-900">История платежей</h2>
+                <h2 className="font-semibold text-gray-900">{t('История платежей')}</h2>
                 {overduePayments.length > 0 && (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full">
                     <AlertTriangle size={13} />
-                    {overduePayments.length}x просрочено
+                    {t('{n}x просрочено', { n: overduePayments.length })}
                   </span>
                 )}
               </div>
 
               {stayMonths.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-xs text-gray-400 mb-3 font-medium uppercase tracking-wider">Календарь проживания</p>
+                  <p className="text-xs text-gray-400 mb-3 font-medium uppercase tracking-wider">{t('Календарь проживания')}</p>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                     {stayMonths.map(m => {
                       const isCurrentMonth = m.year === new Date().getFullYear() && m.month === new Date().getMonth();
@@ -196,28 +195,28 @@ export default function GuestDetail() {
                       let bg = 'bg-gray-50 border-gray-200';
                       let textColor = 'text-gray-400';
                       let dotColor = 'bg-gray-300';
-                      let label = 'Нет данных';
+                      let label = t('Нет данных');
 
                       if (m.status === 'paid') {
                         bg = 'bg-emerald-50 border-emerald-200';
                         textColor = 'text-emerald-700';
                         dotColor = 'bg-emerald-400';
-                        label = 'Оплачено';
+                        label = t('Оплачено');
                       } else if (m.status === 'overdue') {
                         bg = 'bg-red-50 border-red-200';
                         textColor = 'text-red-700';
                         dotColor = 'bg-red-400';
-                        label = 'Просрочено';
+                        label = t('Просрочено');
                       } else if (m.status === 'pending') {
                         bg = 'bg-amber-50 border-amber-200';
                         textColor = 'text-amber-700';
                         dotColor = 'bg-amber-400';
-                        label = 'Ожидает';
+                        label = t('Ожидает');
                       } else if (isFuture) {
                         bg = 'bg-gray-50 border-gray-100';
                         textColor = 'text-gray-300';
                         dotColor = 'bg-gray-200';
-                        label = 'Предстоящий';
+                        label = t('Предстоящий');
                       }
 
                       return (
@@ -227,7 +226,7 @@ export default function GuestDetail() {
                           title={`${m.label} · ${label}${m.payment ? ` · ${m.payment.amount.toLocaleString()} zl` : ''}`}
                         >
                           {isCurrentMonth && (
-                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">СЕЙЧАС</span>
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">{t('СЕЙЧАС')}</span>
                           )}
                           <div className={`w-2 h-2 rounded-full ${dotColor} mx-auto mb-1.5 ${m.status === 'overdue' ? 'animate-pulse' : ''}`} />
                           <p className={`text-[10px] font-bold uppercase ${textColor}`}>{m.shortLabel}</p>
@@ -250,11 +249,11 @@ export default function GuestDetail() {
               )}
 
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">Оплачено</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">Ожидает</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">Просрочено</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-gray-200" /><span className="text-xs text-gray-500">Предстоящий</span></div>
-                <div className="flex items-center gap-1.5"><Send size={12} className="text-blue-500" /><span className="text-xs text-gray-500">SMS отправлены</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-emerald-400" /><span className="text-xs text-gray-500">{t('Оплачено')}</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-amber-400" /><span className="text-xs text-gray-500">{t('Ожидает')}</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-red-400" /><span className="text-xs text-gray-500">{t('Просрочено')}</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-gray-200" /><span className="text-xs text-gray-500">{t('Предстоящий')}</span></div>
+                <div className="flex items-center gap-1.5"><Send size={12} className="text-blue-500" /><span className="text-xs text-gray-500">{t('SMS отправлены')}</span></div>
               </div>
 
               <div className="space-y-3">
@@ -273,7 +272,7 @@ export default function GuestDetail() {
                       <div>
                         <p className="font-medium text-gray-900">{payment.amount.toLocaleString()} zl</p>
                         <p className="text-xs text-gray-400">
-                          {payment.type === 'card' ? 'Карта' : payment.type === 'cash' ? 'Наличные' : 'Перевод'} · {payment.dueDate}
+                          {payment.type === 'card' ? t('Карта') : payment.type === 'cash' ? t('Наличные') : t('Перевод')} · {payment.dueDate}
                           {payment.paidDate && ` → ${payment.paidDate}`}
                         </p>
                       </div>
@@ -290,7 +289,7 @@ export default function GuestDetail() {
                           className="inline-flex items-center gap-1 text-[10px] font-medium text-white bg-blue-500 px-2 py-0.5 rounded hover:bg-blue-600 transition-colors"
                         >
                           <MessageSquare size={9} />
-                           Отправить SMS
+                           {t('Отправить SMS')}
                         </button>
                       ) : null}
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -298,7 +297,7 @@ export default function GuestDetail() {
                         payment.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {payment.status === 'paid' ? 'Оплачено' : payment.status === 'pending' ? 'Ожидает' : 'Просрочено'}
+                        {payment.status === 'paid' ? t('Оплачено') : payment.status === 'pending' ? t('Ожидает') : t('Просрочено')}
                       </span>
                     </div>
                   </div>
@@ -309,14 +308,14 @@ export default function GuestDetail() {
 
           {guestPayments.length === 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">История платежей</h2>
-              <p className="text-gray-400 text-center py-8">Нет платежей</p>
+              <h2 className="font-semibold text-gray-900 mb-4">{t('История платежей')}</h2>
+              <p className="text-gray-400 text-center py-8">{t('Нет платежей')}</p>
             </div>
           )}
         </div>
       </div>
 
-      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Редактировать гостя">
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('Редактировать гостя')}>
         <EditGuestForm guest={guest} onClose={() => setShowEdit(false)} onSave={(data) => {
           updateGuest(guest.id, data);
           setShowEdit(false);
@@ -327,25 +326,25 @@ export default function GuestDetail() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSmsPreview(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900">Предпросмотр SMS</h3>
+              <h3 className="font-semibold text-gray-900">{t('Предпросмотр SMS')}</h3>
               <button onClick={() => setSmsPreview(null)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors">
                 <X size={16} />
               </button>
             </div>
             <div className="p-5">
-              <p className="text-xs text-gray-400 mb-2">Получатель: {guest.name} ({guest.phone}){guest.language ? ` · Язык: ${guestLanguageLabel(guest.language)}` : ''}</p>
+              <p className="text-xs text-gray-400 mb-2">{t('Получатель: {name} ({phone})', { name: guest.name, phone: guest.phone })}{guest.language ? t(' · Язык: {lang}', { lang: guestLanguageLabel(guest.language, t) }) : ''}</p>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <p className="text-sm text-gray-900 leading-relaxed">{smsPreview.text}</p>
               </div>
-              <p className="text-xs text-gray-400 mt-2">{smsPreview.text.length} символов</p>
+              <p className="text-xs text-gray-400 mt-2">{t('{n} символов', { n: smsPreview.text.length })}</p>
             </div>
             <div className="flex gap-3 p-5 pt-0">
               <button onClick={() => setSmsPreview(null)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
-                Отмена
+                {t('Отмена')}
               </button>
               <button onClick={confirmSendSms} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-colors">
                 <Send size={14} />
-                Отправить
+                {t('Отправить')}
               </button>
             </div>
           </div>
@@ -356,6 +355,7 @@ export default function GuestDetail() {
 }
 
 function EditGuestForm({ guest, onClose, onSave }: { guest: any; onClose: () => void; onSave: (data: Partial<any>) => void }) {
+  const { t } = useLanguage();
   const [name, setName] = useState(guest.name);
   const [phone, setPhone] = useState(guest.phone);
   const [email, setEmail] = useState(guest.email);
@@ -373,27 +373,27 @@ function EditGuestForm({ guest, onClose, onSave }: { guest: any; onClose: () => 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
           <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Паспорт / ID')}</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Язык общения')}</label>
         <select value={language} onChange={e => setLanguage(e.target.value as Guest['language'] | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Не указан</option>
+          <option value="">{t('Не указан')}</option>
           {GUEST_LANGUAGES.map(l => (
             <option key={l.value} value={l.value}>{l.label}</option>
           ))}
@@ -401,25 +401,25 @@ function EditGuestForm({ guest, onClose, onSave }: { guest: any; onClose: () => 
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заезд</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Заезд')}</label>
           <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выезд</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выезд')}</label>
           <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Статус</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Статус')}</label>
         <select value={status} onChange={e => setStatus(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="active">Активный</option>
-          <option value="reserved">Забронирован</option>
-          <option value="checked_out">Выселен</option>
+          <option value="active">{t('Активный')}</option>
+          <option value="reserved">{t('Забронирован')}</option>
+          <option value="checked_out">{t('Выселен')}</option>
         </select>
       </div>
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
-        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Сохранить</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Сохранить')}</button>
       </div>
     </form>
   );

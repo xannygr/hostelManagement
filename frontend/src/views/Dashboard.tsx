@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, Users, TrendingUp, ArrowUpRight, DoorOpen, Phone, AlertTriangle, Send, CalendarCheck, DollarSign, BarChart3, X, MessageSquare } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { hostelOccupiedBeds, roomOccupiedBeds, paymentIsDue, paymentStatus } from '../utils/helpers';
 import Legend from '../components/Legend';
 
@@ -11,6 +12,7 @@ function todayStr() {
 
 export default function Dashboard() {
   const { hostels, guests, rooms, payments, updatePayment, stats } = useData();
+  const { t, tp, monthShort } = useLanguage();
   const [hostelFilter, setHostelFilter] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -73,14 +75,14 @@ export default function Dashboard() {
   filteredRooms.forEach(r => {
     const activeGuestsInRoom = filteredGuests.filter(g => g.roomId === r.id && g.status === 'active');
     if (activeGuestsInRoom.length > r.beds) {
-      alerts.push({ id: `overbook-${r.id}`, text: `Пок. ${r.number} перебронирован`, detail: `${activeGuestsInRoom.length} гостей на ${r.beds} кроватях`, severity: 'critical' });
+      alerts.push({ id: `overbook-${r.id}`, text: t('Пок. {n} перебронирован', { n: r.number }), detail: tp(activeGuestsInRoom.length, ['{n} гость на {beds} кроватях', '{n} гостя на {beds} кроватях', '{n} гостей на {beds} кроватях'], { beds: r.beds }), severity: 'critical' });
     }
   });
 
   const totalOverdue = overduePayments.reduce((s, p) => s + p.amount, 0);
   if (totalOverdue > 0) {
     const overdueGuestCount = new Set(overduePayments.map(p => p.guestId)).size;
-    alerts.push({ id: 'overdue-total', text: `Гости имеют просроченные платежи`, detail: `${overdueGuestCount} гостей · ${totalOverdue.toLocaleString()} zl`, severity: 'critical' });
+    alerts.push({ id: 'overdue-total', text: t('Гости имеют просроченные платежи'), detail: `${tp(overdueGuestCount, ['{n} гость', '{n} гостя', '{n} гостей'])} · ${totalOverdue.toLocaleString()} zl`, severity: 'critical' });
   }
 
   const dirtyRooms = filteredRooms.filter(r => {
@@ -88,12 +90,12 @@ export default function Dashboard() {
     return occ > 0 && occ < r.beds;
   });
   if (dirtyRooms.length > 0) {
-    alerts.push({ id: 'dirty', text: `${dirtyRooms.length} номеров нуждаются в уборке`, detail: dirtyRooms.map(r => r.number).join(', '), severity: 'warning' });
+    alerts.push({ id: 'dirty', text: tp(dirtyRooms.length, ['{n} номер нуждается в уборке', '{n} номера нуждаются в уборке', '{n} номеров нуждаются в уборке']), detail: dirtyRooms.map(r => r.number).join(', '), severity: 'warning' });
   }
 
   const missingPassport = filteredGuests.filter(g => g.status === 'active' && (!g.passport || g.passport.trim() === ''));
   missingPassport.forEach(g => {
-    alerts.push({ id: `passport-${g.id}`, text: `Нет паспорта`, detail: `${g.name} · Пок. ${rooms.find(r => r.id === g.roomId)?.number}`, severity: 'warning' });
+    alerts.push({ id: `passport-${g.id}`, text: t('Нет паспорта'), detail: `${g.name} · Пок. ${rooms.find(r => r.id === g.roomId)?.number}`, severity: 'warning' });
   });
 
   const checkoutsWithUnpaid = checkoutsToday.filter(g => {
@@ -102,11 +104,11 @@ export default function Dashboard() {
   checkoutsWithUnpaid.forEach(g => {
     const room = rooms.find(r => r.id === g.roomId);
     const unpaidAmount = filteredPayments.filter(p => p.guestId === g.id && p.status !== 'paid').reduce((s, p) => s + p.amount, 0);
-    alerts.push({ id: `checkout-unpaid-${g.id}`, text: `Выселение с неоплаченным счётом`, detail: `${g.name} · Ном. ${room?.number} · ${unpaidAmount.toLocaleString()} зл`, severity: 'critical' });
+    alerts.push({ id: `checkout-unpaid-${g.id}`, text: t('Выселение с неоплаченным счётом'), detail: `${g.name} · Ном. ${room?.number} · ${unpaidAmount.toLocaleString()} зл`, severity: 'critical' });
   });
 
   const getSmsText = (guestName: string, amount: number, dueDate: string, hostelName: string) => {
-    return `Уважаемый/ая ${guestName.split(' ')[0]}, напоминаем об оплате в размере ${amount.toLocaleString()} зл, срок которой ${dueDate}. Хостел ${hostelName}.`;
+    return t('Уважаемый/ая {name}, напоминаем об оплате в размере {amount} зл, срок которой {date}. Хостел {hostel}.', { name: guestName.split(' ')[0], amount: amount.toLocaleString(), date: dueDate, hostel: hostelName });
   };
 
   const openSmsPreview = (entry: { guestId: string; guestName: string; totalAmount: number; paymentIds: string[] }) => {
@@ -137,16 +139,16 @@ export default function Dashboard() {
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Главная</h1>
-          <p className="text-gray-500 mt-1">Обзор всех хостелов</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Главная')}</h1>
+          <p className="text-gray-500 mt-1">{t('Обзор всех хостелов')}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={<Building2 size={22} />} label="Хостелы" value={useServerStats ? totals.hostelCount : (hostelFilter === 'all' ? hostels.length : 1)} color="indigo" />
-        <StatCard icon={<Users size={22} />} label="Активные гости" value={useServerStats ? totals.occupiedBeds : totalGuests} color="emerald" />
-        <StatCard icon={<DoorOpen size={22} />} label="Занятые номера" value={useServerStats ? `${totals.occupiedRooms}/${totals.totalRooms}` : `${occupiedRooms}/${totalRooms}`} color="amber" />
-        <StatCard icon={<TrendingUp size={22} />} label="Доход" value={`${(useServerStats ? totals.totalRevenue : totalRevenue).toLocaleString()} zl`} color="rose" />
+        <StatCard icon={<Building2 size={22} />} label={t('Хостелы')} value={useServerStats ? totals.hostelCount : (hostelFilter === 'all' ? hostels.length : 1)} color="indigo" />
+        <StatCard icon={<Users size={22} />} label={t('Активные гости')} value={useServerStats ? totals.occupiedBeds : totalGuests} color="emerald" />
+        <StatCard icon={<DoorOpen size={22} />} label={t('Занятые номера')} value={useServerStats ? `${totals.occupiedRooms}/${totals.totalRooms}` : `${occupiedRooms}/${totalRooms}`} color="amber" />
+        <StatCard icon={<TrendingUp size={22} />} label={t('Доход')} value={`${(useServerStats ? totals.totalRevenue : totalRevenue).toLocaleString()} zl`} color="rose" />
       </div>
 
 
@@ -155,17 +157,17 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="flex items-center gap-2 mb-5">
             <AlertTriangle size={16} className="text-red-500" />
-            <h2 className="font-semibold text-gray-900">Неоплаченные счета</h2>
-            <span className="text-sm text-gray-400 ml-auto">{Object.keys(unpaidByGuest).length} гостей · {allUnpaidPayments.reduce((s, p) => s + p.amount, 0).toLocaleString()} зл</span>
+            <h2 className="font-semibold text-gray-900">{t('Неоплаченные счета')}</h2>
+            <span className="text-sm text-gray-400 ml-auto">{tp(Object.keys(unpaidByGuest).length, ['{n} гость', '{n} гостя', '{n} гостей'])} · {allUnpaidPayments.reduce((s, p) => s + p.amount, 0).toLocaleString()} зл</span>
           </div>
           <Legend
             className="mb-4"
             items={[
-              { label: 'Ожидает', color: 'bg-amber-100 border border-amber-200' },
-              { label: 'Просрочка до 7 дн.', color: 'bg-amber-400' },
-              { label: 'Просрочка 7–14 дн.', color: 'bg-orange-400' },
-              { label: 'Просрочка > 14 дн.', color: 'bg-red-400' },
-              { label: 'SMS отправлено', color: 'bg-blue-400' },
+              { label: t('Ожидает'), color: 'bg-amber-100 border border-amber-200' },
+              { label: t('Просрочка до 7 дн.'), color: 'bg-amber-400' },
+              { label: t('Просрочка 7–14 дн.'), color: 'bg-orange-400' },
+              { label: t('Просрочка > 14 дн.'), color: 'bg-red-400' },
+              { label: t('SMS отправлено'), color: 'bg-blue-400' },
             ]}
           />
           <div className="block lg:hidden space-y-2">
@@ -181,16 +183,16 @@ export default function Dashboard() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 truncate">{entry.guestName}</p>
-                      <p className="text-xs text-gray-400 truncate">{hostels.find(h => h.id === entry.hostelId)?.name || '—'} · {entry.count} плат.</p>
+                      <p className="text-xs text-gray-400 truncate">{hostels.find(h => h.id === entry.hostelId)?.name || '—'} · {t('{n} плат.', { n: entry.count })}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-semibold text-red-500">{entry.totalAmount.toLocaleString()} зл</p>
                       {entry.hasOverdue ? (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${overdueDays > 14 ? 'bg-red-100 text-red-700' : overdueDays > 7 ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
-                          Просрочка {overdueDays} дн.
+                          {t('Просрочка {n} дн.', { n: overdueDays })}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 whitespace-nowrap">Ожидает</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 whitespace-nowrap">{t('Ожидает')}</span>
                       )}
                     </div>
                   </Link>
@@ -205,7 +207,7 @@ export default function Dashboard() {
                         <MessageSquare size={12} /> SMS
                       </button>
                       <a href={`tel:${guests.find(g => g.id === entry.guestId)?.phone?.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors">
-                        <Phone size={12} /> Позвонить
+                        <Phone size={12} /> {t('Позвонить')}
                       </a>
                     </div>
                   </div>
@@ -218,13 +220,13 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
-                  <th className="px-4 py-3 font-medium text-gray-400">Гость</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Хостел</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Сумма долга</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Платежей</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Статус</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">{t('Гость')}</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">{t('Хостел')}</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">{t('Сумма долга')}</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">{t('Платежей')}</th>
+                  <th className="px-4 py-3 font-medium text-gray-400">{t('Статус')}</th>
                   <th className="px-4 py-3 font-medium text-gray-400">SMS</th>
-                  <th className="px-4 py-3 font-medium text-gray-400 text-right">Действие</th>
+                  <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('Действие')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -250,16 +252,16 @@ export default function Dashboard() {
                       <td className="px-4 py-3">
                         {entry.hasOverdue ? (
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${overdueDays > 14 ? 'bg-red-100 text-red-700' : overdueDays > 7 ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
-                            Просрочка {overdueDays} дн.
+                            {t('Просрочка {n} дн.', { n: overdueDays })}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 whitespace-nowrap">Ожидает</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 whitespace-nowrap">{t('Ожидает')}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         {entry.smsSent ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded whitespace-nowrap">
-                            <Send size={9} /> Отправлено
+                            <Send size={9} /> {t('Отправлено')}
                           </span>
                         ) : (
                           <span className="text-[10px] text-gray-300">-</span>
@@ -271,7 +273,7 @@ export default function Dashboard() {
                              <MessageSquare size={12} /> SMS
                           </button>
                           <a href={`tel:${guests.find(g => g.id === entry.guestId)?.phone?.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors">
-                             <Phone size={12} /> Позвонить
+                             <Phone size={12} /> {t('Позвонить')}
                           </a>
                         </div>
                       </td>
@@ -289,7 +291,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <Building2 size={16} className="text-gray-400" />
             <select value={hostelFilter} onChange={e => setHostelFilter(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="all">Все хостелы</option>
+              <option value="all">{t('Все хостелы')}</option>
               {hostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
             </select>
           </div>
@@ -301,7 +303,7 @@ export default function Dashboard() {
           </div>
           {(hostelFilter !== 'all' || dateFrom || dateTo) && (
             <button onClick={() => { setHostelFilter('all'); setDateFrom(''); setDateTo(''); }} className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
-              Сбросить
+              {t('Сбросить')}
             </button>
           )}
         </div>
@@ -367,7 +369,6 @@ export default function Dashboard() {
           occByMonth[m] = { guestNights, avgPct: maxNights > 0 ? Math.round((guestNights / maxNights) * 100) : 0, checkins, checkouts, guests };
         });
 
-        const monthShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
         const maxEarnings = Math.max(...earningsMonths.map(m => earningsByMonth[m]?.total || 0), 1);
         const statPaid = filteredPayments.filter(p => paymentStatus(p) === 'paid').reduce((s, p) => s + p.amount, 0);
         const statPending = filteredPayments.filter(p => paymentStatus(p) === 'pending').reduce((s, p) => s + p.amount, 0);
@@ -390,24 +391,24 @@ export default function Dashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign size={16} className="text-emerald-500" />
-                <h3 className="font-semibold text-gray-900 text-sm">Доходы по месяцам</h3>
+                <h3 className="font-semibold text-gray-900 text-sm">{t('Доходы по месяцам')}</h3>
                 <div className="ml-auto flex items-center gap-2">
                   <select value={earningsMonthsCount} onChange={e => setEarningsMonthsCount(Number(e.target.value))} className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value={3}>3 мес.</option>
-                    <option value={6}>6 мес.</option>
-                    <option value={12}>12 мес.</option>
-                    <option value={24}>24 мес.</option>
-                    <option value={999}>Все</option>
+                    <option value={3}>{t('3 мес.')}</option>
+                    <option value={6}>{t('6 мес.')}</option>
+                    <option value={12}>{t('12 мес.')}</option>
+                    <option value={24}>{t('24 мес.')}</option>
+                    <option value={999}>{t('Все')}</option>
                   </select>
-                  <span className="text-xs text-gray-400">{earningsMonths.length} мес.</span>
+                  <span className="text-xs text-gray-400">{t('{n} мес.', { n: earningsMonths.length })}</span>
                 </div>
               </div>
               <Legend
                 className="mb-3"
                 items={[
-                  { label: 'Оплачено', color: 'bg-emerald-400' },
-                  { label: 'Ожидает', color: 'bg-amber-400' },
-                  { label: 'Просрочено', color: 'bg-red-400' },
+                  { label: t('Оплачено'), color: 'bg-emerald-400' },
+                  { label: t('Ожидает'), color: 'bg-amber-400' },
+                  { label: t('Просрочено'), color: 'bg-red-400' },
                 ]}
               />
               <div className="overflow-x-auto -mx-5 px-5">
@@ -426,7 +427,6 @@ export default function Dashboard() {
                           </g>
                         );
                       }
-                      const monthShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
                       earningsMonths.forEach((m, i) => {
                         const e = earningsByMonth[m] || { paid: 0, pending: 0, overdue: 0, total: 0 };
                         const [yr, mo] = m.split('-');
@@ -469,9 +469,9 @@ export default function Dashboard() {
                           <g key="tt" className="transition-opacity" style={{ transition: 'opacity 0.15s' }}>
                             <rect x={ttX} y={ttY} width={ttW} height={ttH} rx={6} fill="#1f2937" />
                             <text x={ttCx} y={ttY + 17} textAnchor="middle" fill="white" style={{ fontSize: 11, fontWeight: 600 }}>{monthLabel}</text>
-                            {e.paid > 0 && <text x={ttCx} y={ttY + 34} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>Оплачено: {e.paid.toLocaleString()} зл</text>}
-                            {e.pending > 0 && <text x={ttCx} y={ttY + (e.paid > 0 ? 51 : 34)} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>Ожидает: {e.pending.toLocaleString()} зл</text>}
-                            {e.overdue > 0 && <text x={ttCx} y={ttY + (e.paid > 0 ? (e.pending > 0 ? 68 : 51) : (e.pending > 0 ? 51 : 34))} textAnchor="middle" fill="#f87171" style={{ fontSize: 10 }}>Просрочено: {e.overdue.toLocaleString()} зл</text>}
+                            {e.paid > 0 && <text x={ttCx} y={ttY + 34} textAnchor="middle" fill="#34d399" style={{ fontSize: 10 }}>{t('Оплачено: {v} зл', { v: e.paid.toLocaleString() })}</text>}
+                            {e.pending > 0 && <text x={ttCx} y={ttY + (e.paid > 0 ? 51 : 34)} textAnchor="middle" fill="#fbbf24" style={{ fontSize: 10 }}>{t('Ожидает: {v} зл', { v: e.pending.toLocaleString() })}</text>}
+                            {e.overdue > 0 && <text x={ttCx} y={ttY + (e.paid > 0 ? (e.pending > 0 ? 68 : 51) : (e.pending > 0 ? 51 : 34))} textAnchor="middle" fill="#f87171" style={{ fontSize: 10 }}>{t('Просрочено: {v} зл', { v: e.overdue.toLocaleString() })}</text>}
                           </g>
                         );
                       }
@@ -482,23 +482,23 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4 pt-4 border-t border-gray-100">
                 <div>
-                  <div className="text-[10px] text-gray-400 mb-0.5">Доход за период</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{t('Доход за период')}</div>
                   <div className="text-sm font-semibold text-gray-900">{statTotal.toLocaleString()} зл</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-400 mb-0.5">Средний / мес</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{t('Средний / мес')}</div>
                   <div className="text-sm font-semibold text-gray-900">{statAvg.toLocaleString()} зл</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-400 mb-0.5">Оплачено</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{t('Оплачено')}</div>
                   <div className="text-sm font-semibold text-emerald-600">{statPaid.toLocaleString()} зл</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-400 mb-0.5">Ожидает</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{t('Ожидает')}</div>
                   <div className="text-sm font-semibold text-amber-600">{statPending.toLocaleString()} зл</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-400 mb-0.5">Просрочено</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{t('Просрочено')}</div>
                   <div className="text-sm font-semibold text-red-600">{statOverdue.toLocaleString()} зл</div>
                 </div>
               </div>
@@ -507,23 +507,23 @@ export default function Dashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={16} className="text-indigo-500" />
-                <h3 className="font-semibold text-gray-900 text-sm">Размещение по месяцам</h3>
+                <h3 className="font-semibold text-gray-900 text-sm">{t('Размещение по месяцам')}</h3>
                 <div className="ml-auto flex items-center gap-2">
                   <select value={occMonthsCount} onChange={e => setOccMonthsCount(Number(e.target.value))} className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value={3}>3 мес.</option>
-                    <option value={6}>6 мес.</option>
-                    <option value={12}>12 мес.</option>
-                    <option value={24}>24 мес.</option>
-                    <option value={999}>Все</option>
+                    <option value={3}>{t('3 мес.')}</option>
+                    <option value={6}>{t('6 мес.')}</option>
+                    <option value={12}>{t('12 мес.')}</option>
+                    <option value={24}>{t('24 мес.')}</option>
+                    <option value={999}>{t('Все')}</option>
                   </select>
-                  <span className="text-xs text-gray-400">{occMonths.length} мес.</span>
+                  <span className="text-xs text-gray-400">{t('{n} мес.', { n: occMonths.length })}</span>
                 </div>
               </div>
               <Legend
                 className="mb-3"
                 items={[
-                  { label: 'Ночлеги', color: 'bg-indigo-400' },
-                  { label: 'Средняя загрузка', swatch: <span className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[7px] border-b-red-500" /> },
+                  { label: t('Ночлеги'), color: 'bg-indigo-400' },
+                  { label: t('Средняя загрузка'), swatch: <span className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[7px] border-b-red-500" /> },
                 ]}
               />
               <div className="overflow-x-auto -mx-5 px-5">
@@ -584,9 +584,9 @@ export default function Dashboard() {
                           <g key="tt" className="transition-opacity" style={{ transition: 'opacity 0.15s' }}>
                             <rect x={ttX} y={ttY} width={ttW} height={ttH} rx={6} fill="#1f2937" />
                             <text x={ttCx} y={ttY + 15} textAnchor="middle" fill="white" style={{ fontSize: 11, fontWeight: 600 }}>{monthLabel}</text>
-                            <text x={ttCx} y={ttY + 31} textAnchor="middle" fill="#c4b5fd" style={{ fontSize: 10 }}>Ночлегов: {o.guestNights}</text>
-                            <text x={ttCx} y={ttY + 45} textAnchor="middle" fill="#818cf8" style={{ fontSize: 10 }}>Среднее кол-во гостей: {o.guests}</text>
-                            <text x={ttCx} y={ttY + 59} textAnchor="middle" fill={color} style={{ fontSize: 10 }}>Загрузка: {o.avgPct}%</text>
+                            <text x={ttCx} y={ttY + 31} textAnchor="middle" fill="#c4b5fd" style={{ fontSize: 10 }}>{t('Ночлеги: {n}', { n: o.guestNights })}</text>
+                            <text x={ttCx} y={ttY + 45} textAnchor="middle" fill="#818cf8" style={{ fontSize: 10 }}>{t('Среднее кол-во гостей: {n}', { n: o.guests })}</text>
+                            <text x={ttCx} y={ttY + 59} textAnchor="middle" fill={color} style={{ fontSize: 10 }}>{t('Загрузка: {p}%', { p: o.avgPct })}</text>
                           </g>
                         );
                       }
@@ -604,11 +604,11 @@ export default function Dashboard() {
                   const avgOcc = occMonths.length > 0 ? Math.round(occMonths.reduce((s, m) => s + (occByMonth[m]?.avgPct || 0), 0) / occMonths.length) : 0;
                   return (
                     <>
-                       <div className="text-center"><p className="text-xs text-gray-400">Среднее кол-во гостей</p><p className="font-bold text-gray-900">{avgGuests}<span className="text-[10px] text-gray-400 font-normal">/мес</span></p></div>
-                       <div className="text-center"><p className="text-xs text-gray-400">Гостей за период</p><p className="font-bold text-gray-900">{filteredGuests.length}</p></div>
-                       <div className="text-center"><p className="text-xs text-gray-400">Заселения</p><p className="font-bold text-gray-900">{totalCheckins}</p></div>
-                       <div className="text-center"><p className="text-xs text-gray-400">Выселения</p><p className="font-bold text-gray-900">{totalCheckouts}</p></div>
-                       <div className="text-center"><p className="text-xs text-gray-400">Средняя загрузка</p><p className={`font-bold ${avgOcc >= 80 ? 'text-emerald-600' : avgOcc >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{avgOcc}%</p></div>
+                       <div className="text-center"><p className="text-xs text-gray-400">{t('Среднее кол-во гостей')}</p><p className="font-bold text-gray-900">{avgGuests}<span className="text-[10px] text-gray-400 font-normal">/мес</span></p></div>
+                       <div className="text-center"><p className="text-xs text-gray-400">{t('Гостей за период')}</p><p className="font-bold text-gray-900">{filteredGuests.length}</p></div>
+                       <div className="text-center"><p className="text-xs text-gray-400">{t('Заселения')}</p><p className="font-bold text-gray-900">{totalCheckins}</p></div>
+                       <div className="text-center"><p className="text-xs text-gray-400">{t('Выселения')}</p><p className="font-bold text-gray-900">{totalCheckouts}</p></div>
+                       <div className="text-center"><p className="text-xs text-gray-400">{t('Средняя загрузка')}</p><p className={`font-bold ${avgOcc >= 80 ? 'text-emerald-600' : avgOcc >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{avgOcc}%</p></div>
                     </>
                   );
                 })()}
@@ -622,7 +622,7 @@ export default function Dashboard() {
 
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900">Ваши хостелы</h2>
+          <h2 className="font-semibold text-gray-900">{t('Ваши хостелы')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {(hostelFilter === 'all' ? hostels : hostels.filter(h => h.id === hostelFilter)).map(h => {
@@ -649,19 +649,19 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Номера</p>
+                    <p className="text-xs text-gray-400 mb-1">{t('Номера')}</p>
                     <p className="font-semibold text-gray-900">{totalRooms}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Загрузка</p>
+                    <p className="text-xs text-gray-400 mb-1">{t('Загрузка')}</p>
                     <p className="font-semibold text-gray-900">{occupancy}%</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Гости</p>
+                    <p className="text-xs text-gray-400 mb-1">{t('Гости')}</p>
                     <p className="font-semibold text-gray-900">{hOcc}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Доход</p>
+                    <p className="text-xs text-gray-400 mb-1">{t('Доход')}</p>
                     <p className="font-semibold text-gray-900">{(revenue / 1000).toFixed(1)}k</p>
                   </div>
                 </div>
@@ -686,13 +686,13 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSmsPreview(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900">Предпросмотр SMS</h3>
+              <h3 className="font-semibold text-gray-900">{t('Предпросмотр SMS')}</h3>
               <button onClick={() => setSmsPreview(null)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors">
                 <X size={16} />
               </button>
             </div>
             <div className="p-5">
-              <p className="text-xs text-gray-400 mb-2">Получатель: {smsPreview.guestName} ({guests.find(g => g.id === smsPreview.guestId)?.phone})</p>
+              <p className="text-xs text-gray-400 mb-2">{t('Получатель: {name} ({phone})', { name: smsPreview.guestName, phone: guests.find(g => g.id === smsPreview.guestId)?.phone ?? '' })}</p>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                   <div className="flex items-start gap-3">
@@ -701,7 +701,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-900 leading-relaxed">{smsPreview.text}</p>
-                      <p className="text-[10px] text-gray-400 mt-2">{smsPreview.text.length} символов</p>
+                      <p className="text-[10px] text-gray-400 mt-2">{t('{n} символов', { n: smsPreview.text.length })}</p>
                     </div>
                   </div>
                 </div>
@@ -709,11 +709,11 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-3 p-5 pt-0">
               <button onClick={() => setSmsPreview(null)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
-                Отмена
+                {t('Отмена')}
               </button>
               <button onClick={confirmSendSms} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-colors">
                 <Send size={14} />
-                Отправить
+                {t('Отправить')}
               </button>
             </div>
           </div>

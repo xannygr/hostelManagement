@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface RoomDatePickerProps {
   roomId: string;
@@ -10,14 +11,12 @@ interface RoomDatePickerProps {
   minDate?: string;
 }
 
-const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-
 function dateStr(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 export default function RoomDatePicker({ roomId, beds, guests, value, onChange, minDate }: RoomDatePickerProps) {
+  const { t, monthFull, dayNames } = useLanguage();
   const initial = value ? new Date(value) : new Date();
   const [current, setCurrent] = useState<Date>(initial);
   const [open, setOpen] = useState(false);
@@ -48,11 +47,11 @@ export default function RoomDatePicker({ roomId, beds, guests, value, onChange, 
   };
 
   const freeLabel = (ds: string) => {
-    if (ds === value) return 'Выбрано';
-    if (isDisabled(ds)) return 'Занято';
+    if (ds === value) return t('Выбрано');
+    if (isDisabled(ds)) return t('Занято');
     const free = freeOn(ds);
-    if (free === beds) return 'Свободно всё';
-    return `Своб. ${free}`;
+    if (free === beds) return t('Свободно всё');
+    return t('Своб. {n}', { n: free });
   };
 
   return (
@@ -63,7 +62,7 @@ export default function RoomDatePicker({ roomId, beds, guests, value, onChange, 
         className="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
       >
         <Calendar size={16} className="text-gray-400 shrink-0" />
-        <span className={value ? 'text-gray-900' : 'text-gray-400'}>{value || 'Выберите дату'}</span>
+        <span className={value ? 'text-gray-900' : 'text-gray-400'}>{value || t('Выберите дату')}</span>
       </button>
 
       {open && (
@@ -72,14 +71,14 @@ export default function RoomDatePicker({ roomId, beds, guests, value, onChange, 
             <button type="button" onClick={() => setCurrent(new Date(year, month - 1, 1))} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
               <ChevronLeft size={16} />
             </button>
-            <span className="font-semibold text-gray-900 text-sm">{MONTHS[month]} {year}</span>
+            <span className="font-semibold text-gray-900 text-sm">{monthFull[month]} {year}</span>
             <button type="button" onClick={() => setCurrent(new Date(year, month + 1, 1))} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
               <ChevronRight size={16} />
             </button>
           </div>
 
           <div className="grid grid-cols-7 gap-1 mb-2">
-            {DAY_NAMES.map(d => (
+            {dayNames.map(d => (
               <div key={d} className="text-center text-[10px] font-medium text-gray-400 py-1">{d}</div>
             ))}
             {Array.from({ length: startOffset }).map((_, i) => (
@@ -105,9 +104,9 @@ export default function RoomDatePicker({ roomId, beds, guests, value, onChange, 
           </div>
 
           <div className="flex flex-wrap gap-3 text-[10px] text-gray-500 pt-2 border-t border-gray-100">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-400" />Свободно всё</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-amber-400" />Частично</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-200" />Занято</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-400" />{t('Свободно всё')}</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-amber-400" />{t('Частично')}</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-200" />{t('Занято')}</span>
           </div>
         </div>
       )}

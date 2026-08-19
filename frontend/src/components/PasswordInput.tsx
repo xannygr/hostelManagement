@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface PasswordInputProps {
   value: string;
@@ -13,6 +14,7 @@ interface PasswordInputProps {
 
 export default function PasswordInput({ value, onChange, placeholder, className, minLength, required, autoComplete }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
   return (
     <div className="relative">
       <input
@@ -28,7 +30,7 @@ export default function PasswordInput({ value, onChange, placeholder, className,
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? 'Скрыть пароль' : 'Показать пароль'}
+        aria-label={visible ? t('Скрыть пароль') : t('Показать пароль')}
         className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
       >
         {visible ? <EyeOff size={18} /> : <Eye size={18} />}

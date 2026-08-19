@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Bell, ArrowLeft, X, RotateCcw
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { paymentStatus, guestLanguageLabel } from '../utils/helpers';
 
 interface SmsRule {
@@ -19,75 +20,76 @@ interface SmsRule {
   bgColor: string;
 }
 
-const defaultRules: SmsRule[] = [
+const buildDefaultRules = (t: (k: string, p?: Record<string, string | number>) => string): SmsRule[] => [
   {
     id: '3days',
-    name: 'Напоминание за 3 дня',
-    timing: '3 дня до срока',
-    timingDescription: 'Сообщение будет отправлено за 3 дня до даты оплаты',
+    name: t('Напоминание за 3 дня'),
+    timing: t('3 дня до срока'),
+    timingDescription: t('Сообщение будет отправлено за 3 дня до даты оплаты'),
     enabled: true,
-    template: 'Уважаемый/ая {imie}, напоминаем об оплате в размере {kwota} зл, срок которой {data}. Хостел {hostel}.',
+    template: t('Уважаемый/ая {imie}, напоминаем об оплате в размере {kwota} зл, срок которой {data}. Хостел {hostel}.'),
     icon: <Clock size={18} />,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
   },
   {
     id: '1day',
-    name: 'Напоминание за 1 день',
-    timing: '1 день до срока',
-    timingDescription: 'Сообщение будет отправлено за 1 день до даты оплаты',
+    name: t('Напоминание за 1 день'),
+    timing: t('1 день до срока'),
+    timingDescription: t('Сообщение будет отправлено за 1 день до даты оплаты'),
     enabled: true,
-    template: 'Уважаемый/ая {imie}, завтра истекает срок оплаты {kwota} зл за проживание в хостеле {hostel}. Просим произвести оплату.',
+    template: t('Уважаемый/ая {imie}, завтра истекает срок оплаты {kwota} зл за проживание в хостеле {hostel}. Просим произвести оплату.'),
     icon: <Bell size={18} />,
     color: 'text-amber-600',
     bgColor: 'bg-amber-50',
   },
   {
     id: 'oday',
-    name: 'В день оплаты',
-    timing: 'В день срока',
-    timingDescription: 'Сообщение будет отправлено в день оплаты',
+    name: t('В день оплаты'),
+    timing: t('В день срока'),
+    timingDescription: t('Сообщение будет отправлено в день оплаты'),
     enabled: true,
-    template: 'Уважаемый/ая {imie}, сегодня истекает срок оплаты {kwota} зл. Хостел {hostel}. Отсутствие оплаты может повлечь начисление пени.',
+    template: t('Уважаемый/ая {imie}, сегодня истекает срок оплаты {kwota} зл. Хостел {hostel}. Отсутствие оплаты может повлечь начисление пени.'),
     icon: <AlertTriangle size={18} />,
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
   },
   {
     id: 'after1',
-    name: '1 день после срока',
-    timing: '1 день после срока',
-    timingDescription: 'Сообщение будет отправлено через 1 день после просрочки',
+    name: t('1 день после срока'),
+    timing: t('1 день после срока'),
+    timingDescription: t('Сообщение будет отправлено через 1 день после просрочки'),
     enabled: true,
-    template: 'Уважаемый/ая {imie}, срок оплаты {kwota} зл превышен. Хостел {hostel}. Просим произвести оплату.',
+    template: t('Уважаемый/ая {imie}, срок оплаты {kwota} зл превышен. Хостел {hostel}. Просим произвести оплату.'),
     icon: <AlertTriangle size={18} />,
     color: 'text-red-600',
     bgColor: 'bg-red-50',
   },
   {
     id: 'after3',
-    name: '3 дня после срока',
-    timing: '3 дня после срока',
-    timingDescription: 'Сообщение будет отправлено через 3 дня после просрочки',
+    name: t('3 дня после срока'),
+    timing: t('3 дня после срока'),
+    timingDescription: t('Сообщение будет отправлено через 3 дня после просрочки'),
     enabled: false,
-    template: 'Уважаемый/ая {imie}, ваша оплата в размере {kwota} зл не оплачена уже 3 дня. Хостел {hostel}. Просим произвести оплату немедленно, чтобы избежать дальнейших мер.',
+    template: t('Уважаемый/ая {imie}, ваша оплата в размере {kwota} зл не оплачена уже 3 дня. Хостел {hostel}. Просим произвести оплату немедленно, чтобы избежать дальнейших мер.'),
     icon: <AlertTriangle size={18} />,
     color: 'text-red-700',
     bgColor: 'bg-red-100',
   },
 ];
 
-const placeholders = [
-  { key: '{imie}', description: 'Имя гостя' },
-  { key: '{kwota}', description: 'Сумма платежа (зл)' },
-  { key: '{data}', description: 'Дата срока оплаты' },
-  { key: '{hostel}', description: 'Название хостела' },
-  { key: '{pokoj}', description: 'Номер комнаты' },
+const placeholders = (t: (k: string, p?: Record<string, string | number>) => string) => [
+  { key: '{imie}', description: t('Имя гостя') },
+  { key: '{kwota}', description: t('Сумма платежа (зл)') },
+  { key: '{data}', description: t('Дата срока оплаты') },
+  { key: '{hostel}', description: t('Название хостела') },
+  { key: '{pokoj}', description: t('Номер комнаты') },
 ];
 
 export default function SmsPage() {
   const { guests, payments, hostels, rooms, updatePayment } = useData();
-  const [rules, setRules] = useState<SmsRule[]>(defaultRules);
+  const { t } = useLanguage();
+  const [rules, setRules] = useState<SmsRule[]>(buildDefaultRules(t));
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState<string | null>(null);
   const [editingTemplates, setEditingTemplates] = useState<Record<string, string>>({});
@@ -179,7 +181,7 @@ export default function SmsPage() {
     const rule = paymentStatus(p) === 'overdue'
       ? (overdueDays > 3 ? rules.find(r => r.id === 'after3') : rules.find(r => r.id === 'after1'))
       : rules.find(r => r.id === '3days');
-    const template = rule?.template || defaultRules[0].template;
+    const template = rule?.template || rules[0]?.template || '';
     return template
       .replace(/{imie}/g, p.guestName.split(' ')[0])
       .replace(/{kwota}/g, String(p.amount))
@@ -211,12 +213,12 @@ export default function SmsPage() {
     <div className="p-4 sm:p-8">
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
         <ArrowLeft size={16} />
-        Вернуться на главную
+        {t('Вернуться на главную')}
       </Link>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">SMS Напоминания</h1>
-        <p className="text-gray-500 mt-1">Управление правилами и шаблонами SMS</p>
+        <h1 className="text-2xl font-bold text-gray-900">SMS {t('Напоминания')}</h1>
+        <p className="text-gray-500 mt-1">{t('Управление правилами и шаблонами SMS')}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -224,28 +226,28 @@ export default function SmsPage() {
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center"><MessageSquare size={16} /></div>
           </div>
-          <p className="text-sm text-gray-400 mb-1">Активные правила</p>
+          <p className="text-sm text-gray-400 mb-1">{t('Активные правила')}</p>
           <p className="text-2xl font-bold text-gray-900">{activeRulesCount}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center"><Clock size={16} /></div>
           </div>
-          <p className="text-sm text-gray-400 mb-1">Ожидающие</p>
+          <p className="text-sm text-gray-400 mb-1">{t('Ожидающие')}</p>
           <p className="text-2xl font-bold text-amber-600">{pendingPayments.length}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><AlertTriangle size={16} /></div>
           </div>
-          <p className="text-sm text-gray-400 mb-1">Просрочки</p>
+          <p className="text-sm text-gray-400 mb-1">{t('Просрочки')}</p>
           <p className="text-2xl font-bold text-red-600">{overduePayments.length}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><Send size={16} /></div>
           </div>
-          <p className="text-sm text-gray-400 mb-1">Отправленные SMS</p>
+          <p className="text-sm text-gray-400 mb-1">{t('Отправленные SMS')}</p>
           <p className="text-2xl font-bold text-blue-600">{smsSentPayments.length}</p>
         </div>
       </div>
@@ -254,7 +256,7 @@ export default function SmsPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="flex items-center p-5 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900">Правила отправки</h2>
+              <h2 className="font-semibold text-gray-900">{t('Правила отправки')}</h2>
             </div>
 
             <div className="divide-y divide-gray-50">
@@ -271,15 +273,15 @@ export default function SmsPage() {
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">{rule.name}</p>
                         {rule.enabled ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-600 bg-emerald-50">АКТИВНА</span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-600 bg-emerald-50">{t('АКТИВНА')}</span>
                         ) : (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400 bg-gray-100">ОТКЛЮЧЕНА</span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400 bg-gray-100">{t('ОТКЛЮЧЕНА')}</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5">{rule.timing} — {rule.timingDescription}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => setShowPreview(showPreview === rule.id ? null : rule.id)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors" title="Просмотр">
+                      <button onClick={() => setShowPreview(showPreview === rule.id ? null : rule.id)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors" title={t('Просмотр')}>
                         {showPreview === rule.id ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                       <button onClick={() => {
@@ -288,13 +290,13 @@ export default function SmsPage() {
                         } else {
                           startEditingTemplate(rule.id, rule.template);
                         }
-                      }} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors" title={isEditing ? 'Закрыть редактирование' : 'Редактировать шаблон'}>
+                      }} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors" title={isEditing ? t('Закрыть редактирование') : t('Редактировать шаблон')}>
                         {isEditing ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </button>
-                      <button onClick={() => toggleRule(rule.id)} className={`relative w-11 h-6 rounded-full transition-colors ${rule.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`} title={rule.enabled ? 'Выключить' : 'Включить'}>
+                      <button onClick={() => toggleRule(rule.id)} className={`relative w-11 h-6 rounded-full transition-colors ${rule.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`} title={rule.enabled ? t('Выключить') : t('Включить')}>
                         <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${rule.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
                       </button>
-                      <button onClick={() => deleteRule(rule.id)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors" title="Удалить">
+                      <button onClick={() => deleteRule(rule.id)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors" title={t('Удалить')}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -303,7 +305,7 @@ export default function SmsPage() {
                   {showPreview === rule.id && (
                     <div className="px-5 pb-4">
                       <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Предпросмотр сообщения</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('Предпросмотр сообщения')}</p>
                         <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
@@ -323,9 +325,9 @@ export default function SmsPage() {
                     <div className="px-5 pb-4">
                       <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Шаблон сообщения</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('Шаблон сообщения')}</p>
                           <div className="flex flex-wrap gap-1">
-                            {placeholders.map(ph => (
+                            {placeholders(t).map(ph => (
                               <button key={ph.key} onClick={() => insertPlaceholder(rule.id, ph.key)} className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-mono text-gray-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-colors" title={ph.description}>
                                 {ph.key}
                               </button>
@@ -339,14 +341,14 @@ export default function SmsPage() {
                           rows={3}
                           className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                         />
-                        <p className="text-[10px] text-gray-400 mt-1.5">{editValue.length} / 160 символов</p>
+                        <p className="text-[10px] text-gray-400 mt-1.5">{t('{n} / 160 символов', { n: editValue.length })}</p>
                         <div className="flex items-center gap-2 mt-3">
                           <button type="button" onClick={() => saveTemplate(rule.id)} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors">
-                            Сохранить шаблон
+                            {t('Сохранить шаблон')}
                           </button>
                           <button type="button" onClick={() => cancelEditingTemplate(rule.id)} className="flex items-center justify-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors">
                             <X size={13} />
-                            Отмена
+                            {t('Отмена')}
                           </button>
                         </div>
                       </div>
@@ -361,8 +363,8 @@ export default function SmsPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div>
-                <h2 className="font-semibold text-gray-900">История SMS</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{smsSentPayments.length} сообщений в истории</p>
+                <h2 className="font-semibold text-gray-900">{t('История SMS')}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">{t('{n} сообщений в истории', { n: smsSentPayments.length })}</p>
               </div>
             </div>
             {smsSentPayments.length === 0 ? (
@@ -370,8 +372,8 @@ export default function SmsPage() {
                 <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Send size={24} className="text-gray-300" />
                 </div>
-                <p className="text-gray-400 text-sm">Нет отправленных SMS</p>
-                <p className="text-xs text-gray-300 mt-1">Сообщения появятся здесь после отправки</p>
+                <p className="text-gray-400 text-sm">{t('Нет отправленных SMS')}</p>
+                <p className="text-xs text-gray-300 mt-1">{t('Сообщения появятся здесь после отправки')}</p>
               </div>
             ) : (
               <>
@@ -382,7 +384,7 @@ export default function SmsPage() {
                   const hostel = guest ? hostels.find(h => h.id === guest.hostelId) : null;
                   const status = paymentStatus(p);
                   const statusStyles: Record<string, string> = { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', overdue: 'bg-red-100 text-red-700' };
-                  const statusLabels: Record<string, string> = { paid: 'Оплачено', pending: 'Ожидает', overdue: 'Просрочено' };
+                  const statusLabels: Record<string, string> = { paid: t('Оплачено'), pending: t('Ожидает'), overdue: t('Просрочено') };
                   return (
                     <div key={p.id} className="bg-white rounded-xl border border-gray-100 p-4">
                       <div className="flex items-center gap-3">
@@ -391,28 +393,28 @@ export default function SmsPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 truncate">{p.guestName}</p>
-                          <p className="text-xs text-gray-400 truncate">{hostel?.name} · Ном. {room?.number}</p>
+                          <p className="text-xs text-gray-400 truncate">{hostel?.name} · {t('Ном. {n}', { n: room?.number ?? '' })}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${statusStyles[status]}`}>{statusLabels[status]}</span>
                       </div>
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
                         <div>
                           <p className="font-semibold text-gray-900">{p.amount.toLocaleString()} zl</p>
-                          <p className="text-xs text-gray-400">Срок {p.dueDate}{status === 'overdue' ? ` · просрочка ${Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24))} дн.` : ''}</p>
+                          <p className="text-xs text-gray-400">{t('Срок {date}', { date: p.dueDate })}{status === 'overdue' ? t(' · просрочка {n} дн.', { n: Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24)) }) : ''}</p>
                         </div>
                         <div className="ml-auto">
                           {resentIds.has(p.id) ? (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium">
-                              <Send size={12} /> Отправлено
+                              <Send size={12} /> {t('Отправлено')}
                             </span>
                           ) : (
                             <button
                               onClick={() => openSmsPreview(p)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
-                              title={p.smsSent ? "Отправить повторно" : "Отправить SMS"}
+                              title={p.smsSent ? t('Отправить повторно') : t('Отправить SMS')}
                             >
                               {p.smsSent ? <RotateCcw size={12} /> : <Send size={12} />}
-                              {p.smsSent ? 'Повторить' : 'Отправить'}
+                              {p.smsSent ? t('Повторить') : t('Отправить')}
                             </button>
                           )}
                         </div>
@@ -426,13 +428,13 @@ export default function SmsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 text-left">
-                      <th className="px-4 py-3 font-medium text-gray-400">Гость</th>
-                      <th className="px-4 py-3 font-medium text-gray-400">Номер</th>
-                      <th className="px-4 py-3 font-medium text-gray-400">Сумма</th>
-                      <th className="px-4 py-3 font-medium text-gray-400">Срок</th>
-                      <th className="px-4 py-3 font-medium text-gray-400">Статус оплаты</th>
-                      <th className="px-4 py-3 font-medium text-gray-400">Просрочка</th>
-                      <th className="px-4 py-3 font-medium text-gray-400 text-right">Действие</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Гость')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Номер')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Сумма')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Срок')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Статус оплаты')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400">{t('Просрочка')}</th>
+                      <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('Действие')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -447,9 +449,9 @@ export default function SmsPage() {
                         overdue: 'bg-red-100 text-red-700',
                       };
                       const statusLabels: Record<string, string> = {
-                        paid: 'Оплачено',
-                        pending: 'Ожидает',
-                        overdue: 'Просрочено',
+                        paid: t('Оплачено'),
+                        pending: t('Ожидает'),
+                        overdue: t('Просрочено'),
                       };
                       return (
                         <tr key={p.id} className="hover:bg-gray-50 transition-colors">
@@ -464,7 +466,7 @@ export default function SmsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 whitespace-nowrap">Ном. {room?.number}</td>
+                          <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{t('Ном. {n}', { n: room?.number ?? '' })}</td>
                           <td className="px-4 py-3 font-semibold text-gray-900">{p.amount.toLocaleString()} zl</td>
                           <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{p.dueDate}</td>
                           <td className="px-4 py-3">
@@ -473,7 +475,7 @@ export default function SmsPage() {
                           <td className="px-4 py-3">
                             {status === 'overdue' ? (
                               <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
-                                {Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24))} дн.
+                                {Math.ceil((new Date().getTime() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24))} {t('дн.')}
                               </span>
                             ) : (
                               <span className="text-xs text-gray-300">—</span>
@@ -483,16 +485,16 @@ export default function SmsPage() {
                             {resentIds.has(p.id) ? (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium">
                                 <Send size={12} />
-                                Отправлено
+                                {t('Отправлено')}
                               </span>
                             ) : (
                               <button
                                 onClick={() => openSmsPreview(p)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
-                                title={p.smsSent ? "Отправить повторно" : "Отправить SMS"}
+                                title={p.smsSent ? t('Отправить повторно') : t('Отправить SMS')}
                               >
                                 {p.smsSent ? <RotateCcw size={12} /> : <Send size={12} />}
-                                {p.smsSent ? 'Отправить повторно' : 'Отправить'}
+                                {p.smsSent ? t('Отправить повторно') : t('Отправить')}
                               </button>
                             )}
                           </td>
@@ -513,17 +515,17 @@ export default function SmsPage() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSmsPreview(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900">Предпросмотр SMS</h3>
+              <h3 className="font-semibold text-gray-900">{t('Предпросмотр SMS')}</h3>
               <button onClick={() => setSmsPreview(null)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors">
                 <X size={16} />
               </button>
             </div>
             <div className="p-5">
               <p className="text-xs text-gray-400 mb-2">
-                Получатель: {smsPreview.payment.guestName} ({guests.find(g => g.id === smsPreview.payment.guestId)?.phone})
+                {t('Получатель: {name} ({phone})', { name: smsPreview.payment.guestName, phone: guests.find(g => g.id === smsPreview.payment.guestId)?.phone ?? '' })}
                 {(() => {
                   const lang = guests.find(g => g.id === smsPreview.payment.guestId)?.language;
-                  return lang ? ` · Язык: ${guestLanguageLabel(lang)}` : '';
+                  return lang ? t(' · Язык: {lang}', { lang: guestLanguageLabel(lang, t) }) : '';
                 })()}
               </p>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -534,7 +536,7 @@ export default function SmsPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-900 leading-relaxed">{smsPreview.text}</p>
-                      <p className="text-[10px] text-gray-400 mt-2">{smsPreview.text.length} символов</p>
+                      <p className="text-[10px] text-gray-400 mt-2">{t('{n} символов', { n: smsPreview.text.length })}</p>
                     </div>
                   </div>
                 </div>
@@ -542,11 +544,11 @@ export default function SmsPage() {
             </div>
             <div className="flex gap-3 p-5 pt-0">
               <button onClick={() => setSmsPreview(null)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
-                Отмена
+                {t('Отмена')}
               </button>
               <button onClick={confirmSend} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-colors">
                 <Send size={14} />
-                Отправить
+                {t('Отправить')}
               </button>
             </div>
           </div>

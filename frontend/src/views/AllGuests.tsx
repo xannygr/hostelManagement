@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search, Phone, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { GuestLanguage } from '../types';
 import { guestTotalPaid, guestTotalDue, roomOccupiedBeds, GUEST_LANGUAGES } from '../utils/helpers';
 import Legend from '../components/Legend';
@@ -9,6 +10,7 @@ import Modal from '../components/Modal';
 
 export default function AllGuests() {
   const { guests, rooms, hostels, payments } = useData();
+  const { t, tp } = useLanguage();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
@@ -31,24 +33,24 @@ export default function AllGuests() {
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Все гости</h1>
-          <p className="text-gray-500 mt-1">{guests.length} гостей во всех хостелах</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Все гости')}</h1>
+          <p className="text-gray-500 mt-1">{tp(guests.length, ['{n} гость во всех хостелах', '{n} гостя во всех хостелах', '{n} гостей во всех хостелах'])}</p>
         </div>
         <button
           onClick={() => setShowAddGuest(true)}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
-          <Plus size={16} /> Добавить гостя
+          <Plus size={16} /> {t('Добавить гостя')}
         </button>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input type="text" placeholder="Поиск по имени или телефону..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="text" placeholder={t('Поиск по имени или телефону...')} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">Сумма зл:</span>
+          <span className="text-xs text-gray-400">{t('Сумма зл:')}</span>
           <input type="number" placeholder="min" value={minAmount} onChange={e => setMinAmount(e.target.value)} className="w-20 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           <span className="text-gray-300">—</span>
           <input type="number" placeholder="max" value={maxAmount} onChange={e => setMaxAmount(e.target.value)} className="w-20 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -59,10 +61,10 @@ export default function AllGuests() {
         <Filter size={14} className="text-gray-400" />
         <div className="flex bg-white border border-gray-200 rounded-xl overflow-hidden flex-wrap">
           {[
-            { key: 'all', label: 'Все' },
-            { key: 'active', label: 'Активные' },
-            { key: 'checked_out', label: 'Выселенные' },
-            { key: 'reserved', label: 'Забронированные' },
+            { key: 'all', label: t('Все') },
+            { key: 'active', label: t('Активные') },
+            { key: 'checked_out', label: t('Выселенные') },
+            { key: 'reserved', label: t('Забронированные') },
           ].map(f => (
             <button key={f.key} onClick={() => setStatusFilter(f.key)} className={`px-4 py-2 text-sm font-medium transition-colors ${statusFilter === f.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
               {f.label}
@@ -71,10 +73,10 @@ export default function AllGuests() {
         </div>
         <div className="flex bg-white border border-gray-200 rounded-xl overflow-hidden flex-wrap">
           {[
-            { key: 'all', label: 'Оплата: все' },
-            { key: 'paid', label: 'Оплатили' },
-            { key: 'pending', label: 'В ожидании' },
-            { key: 'unpaid', label: 'Не оплатили' },
+            { key: 'all', label: t('Оплата: все') },
+            { key: 'paid', label: t('Оплатили') },
+            { key: 'pending', label: t('В ожидании') },
+            { key: 'unpaid', label: t('Не оплатили') },
           ].map(f => (
             <button key={f.key} onClick={() => setPaymentFilter(f.key)} className={`px-4 py-2 text-sm font-medium transition-colors ${paymentFilter === f.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
               {f.label}
@@ -86,15 +88,15 @@ export default function AllGuests() {
       <Legend
         className="mb-6"
         items={[
-          { label: 'Активный', color: 'bg-emerald-500' },
-          { label: 'Забронирован', color: 'bg-amber-500' },
-          { label: 'Выселен', color: 'bg-gray-400' },
-          { label: 'Долг', color: 'bg-red-500' },
+          { label: t('Активный'), color: 'bg-emerald-500' },
+          { label: t('Забронирован'), color: 'bg-amber-500' },
+          { label: t('Выселен'), color: 'bg-gray-400' },
+          { label: t('Долг'), color: 'bg-red-500' },
         ]}
       />
 
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-gray-400">Гости не найдены</div>
+        <div className="py-12 text-center text-gray-400">{t('Гости не найдены')}</div>
       ) : (
         <>
           <div className="block lg:hidden space-y-2">
@@ -109,7 +111,7 @@ export default function AllGuests() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors truncate text-sm">{guest.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{hostel?.name} · Ном. {room?.number}</p>
+                      <p className="text-xs text-gray-400 truncate">{hostel?.name} · {t('Ном. {n}', { n: room?.number ?? '' })}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -118,7 +120,7 @@ export default function AllGuests() {
                         {guest.totalDue > 0 ? `-${guest.totalDue.toLocaleString()}` : `${guest.totalPaid.toLocaleString()} zl`}
                       </p>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${guest.status === 'active' ? 'bg-emerald-100 text-emerald-700' : guest.status === 'reserved' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {guest.status === 'active' ? 'Активный' : guest.status === 'reserved' ? 'Бронь' : 'Выселен'}
+                        {guest.status === 'active' ? t('Активный') : guest.status === 'reserved' ? t('Бронь') : t('Выселен')}
                       </span>
                     </div>
                     <button
@@ -128,7 +130,7 @@ export default function AllGuests() {
                         window.location.href = `tel:${guest.phone.replace(/\s/g, '')}`;
                       }}
                       className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors shrink-0"
-                      title={`Позвонить: ${guest.phone}`}
+                      title={t('Позвонить: {phone}', { phone: guest.phone })}
                     >
                       <Phone size={14} />
                     </button>
@@ -142,11 +144,11 @@ export default function AllGuests() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
-                  <th className="px-6 py-3 font-medium text-gray-400">Гость</th>
-                  <th className="px-6 py-3 font-medium text-gray-400">Хостел / Номер</th>
-                  <th className="px-6 py-3 font-medium text-gray-400">Срок</th>
-                  <th className="px-6 py-3 font-medium text-gray-400 text-right">Сумма</th>
-                  <th className="px-6 py-3 font-medium text-gray-400 text-right">Статус</th>
+                  <th className="px-6 py-3 font-medium text-gray-400">{t('Гость')}</th>
+                  <th className="px-6 py-3 font-medium text-gray-400">{t('Хостел / Номер')}</th>
+                  <th className="px-6 py-3 font-medium text-gray-400">{t('Срок')}</th>
+                  <th className="px-6 py-3 font-medium text-gray-400 text-right">{t('Сумма')}</th>
+                  <th className="px-6 py-3 font-medium text-gray-400 text-right">{t('Статус')}</th>
                   <th className="px-6 py-3 w-10"></th>
                 </tr>
               </thead>
@@ -164,17 +166,17 @@ export default function AllGuests() {
                           <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors truncate">{guest.name}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{hostel?.name} · Ном. {room?.number}</td>
+                      <td className="px-6 py-3 text-gray-600 whitespace-nowrap">{hostel?.name} · {t('Ном. {n}', { n: room?.number ?? '' })}</td>
                       <td className="px-6 py-3 text-gray-500 whitespace-nowrap text-xs">{guest.checkIn} — {guest.checkOut}</td>
                       <td className="px-6 py-3 text-right whitespace-nowrap">
                         <p className={`font-medium ${guest.totalDue > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                           {guest.totalDue > 0 ? `-${guest.totalDue.toLocaleString()} zl` : `${guest.totalPaid.toLocaleString()} zl`}
                         </p>
-                        <p className="text-xs text-gray-400">{guest.totalDue > 0 ? 'долг' : 'оплачено'}</p>
+                        <p className="text-xs text-gray-400">{guest.totalDue > 0 ? t('долг') : t('оплачено')}</p>
                       </td>
                       <td className="px-6 py-3 text-right">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${guest.status === 'active' ? 'bg-emerald-100 text-emerald-700' : guest.status === 'reserved' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {guest.status === 'active' ? 'Активный' : guest.status === 'reserved' ? 'Забронирован' : 'Выселен'}
+                          {guest.status === 'active' ? t('Активный') : guest.status === 'reserved' ? t('Забронирован') : t('Выселен')}
                         </span>
                       </td>
                       <td className="px-6 py-3">
@@ -182,7 +184,7 @@ export default function AllGuests() {
                           href={`tel:${guest.phone.replace(/\s/g, '')}`}
                           onClick={e => e.stopPropagation()}
                           className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors"
-                          title={`Позвонить: ${guest.phone}`}
+title={t('Позвонить: {phone}', { phone: guest.phone })}
                         >
                           <Phone size={14} />
                         </a>
@@ -196,7 +198,7 @@ export default function AllGuests() {
         </>
       )}
 
-      <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title="Добавить гостя">
+      <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title={t('Добавить гостя')}>
         <AddGuestForm onClose={() => setShowAddGuest(false)} />
       </Modal>
     </div>
@@ -205,6 +207,7 @@ export default function AllGuests() {
 
 function AddGuestForm({ onClose }: { onClose: () => void }) {
   const { hostels, rooms, guests, addGuest } = useData();
+  const { t } = useLanguage();
   const [hostelId, setHostelId] = useState(hostels[0]?.id || '');
   const [roomId, setRoomId] = useState('');
   const [name, setName] = useState('');
@@ -229,7 +232,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Хостел</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Хостел')}</label>
         <select required value={hostelId} onChange={e => { setHostelId(e.target.value); setRoomId(''); }} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           {hostels.map(h => (
             <option key={h.id} value={h.id}>{h.name}</option>
@@ -237,23 +240,23 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Комната</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Комната')}</label>
         <select required value={activeRoom} onChange={e => setRoomId(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           {hostelRooms.map(r => {
             const occ = roomOccupiedBeds(r.id, guests);
             return (
-              <option key={r.id} value={r.id}>{r.number} · {r.type} · {r.beds - occ} свободных · {r.pricePerBed} зл/кровать</option>
+              <option key={r.id} value={r.id}>{r.number} · {r.type} · {t('{n} свободных', { n: r.beds - occ })} · {t('{n} зл/кровать', { n: r.pricePerBed })}</option>
             );
           })}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Имя и фамилия</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
           <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
@@ -262,13 +265,13 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Паспорт / ID</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Паспорт / ID')}</label>
         <input type="text" value={passport} onChange={e => setPassport(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="PL 1234567" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Язык общения</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Язык общения')}</label>
         <select value={language} onChange={e => setLanguage(e.target.value as GuestLanguage | '')} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Не указан</option>
+          <option value="">{t('Не указан')}</option>
           {GUEST_LANGUAGES.map(l => (
             <option key={l.value} value={l.value}>{l.label}</option>
           ))}
@@ -276,22 +279,22 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Заселение</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Заселение')}</label>
           <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Выселение</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение')}</label>
           <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       {selectedRoom && checkIn && checkOut && (
         <p className="text-xs text-gray-400">
-          Итого: {selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)))} зл за период
+          {t('Итого: {n} зл за период', { n: selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) })}
         </p>
       )}
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Отмена</button>
-        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Добавить</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
+        <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>
       </div>
     </form>
   );

@@ -11,8 +11,9 @@ export const GUEST_LANGUAGES: { value: GuestLanguage | ''; label: string }[] = [
   { value: 'other', label: 'Другой' },
 ];
 
-export function guestLanguageLabel(lang?: GuestLanguage | '' | null): string {
-  return GUEST_LANGUAGES.find((l) => l.value === lang)?.label ?? 'Не указан';
+export function guestLanguageLabel(lang: GuestLanguage | '' | null | undefined, t?: (key: string) => string): string {
+  const label = GUEST_LANGUAGES.find((l) => l.value === lang)?.label ?? 'Не указан';
+  return t ? t(label) : label;
 }
 
 export function roomOccupiedBeds(roomId: string, guests: Guest[]): number {

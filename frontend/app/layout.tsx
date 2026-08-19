@@ -4,7 +4,7 @@ import Providers from './providers';
 
 export const metadata: Metadata = {
   title: 'HostelHaven',
-  description: 'Управление хостелами',
+  description: 'Управління хостелами',
 };
 
 export const viewport: Viewport = {
