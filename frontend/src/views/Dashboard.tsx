@@ -222,7 +222,7 @@ export default function Dashboard() {
                 <tr className="bg-gray-50 text-left">
                   <th className="px-4 py-3 font-medium text-gray-400">{t('Гость')}</th>
                   <th className="px-4 py-3 font-medium text-gray-400">{t('Хостел')}</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">{t('Сумма долга')}</th>
+                  <th className="px-4 py-3 font-medium text-gray-400 whitespace-nowrap">{t('Сумма долга')}</th>
                   <th className="px-4 py-3 font-medium text-gray-400">{t('Платежей')}</th>
                   <th className="px-4 py-3 font-medium text-gray-400">{t('Статус')}</th>
                   <th className="px-4 py-3 font-medium text-gray-400">SMS</th>

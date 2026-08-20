@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Phone, Filter, Plus } from 'lucide-react';
+import { Search, Phone, Filter, Plus, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -9,7 +9,7 @@ import Legend from '../components/Legend';
 import Modal from '../components/Modal';
 
 export default function AllGuests() {
-  const { guests, rooms, hostels, payments } = useData();
+  const { guests, rooms, hostels, payments, updatePayment } = useData();
   const { t, tp } = useLanguage();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -17,6 +17,30 @@ export default function AllGuests() {
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [showAddGuest, setShowAddGuest] = useState(false);
+  const [smsPreview, setSmsPreview] = useState<{ text: string; guestId: string; paymentId: string } | null>(null);
+
+  const getSmsText = (guest: any, payment?: any) => {
+    const hostel = hostels.find(h => h.id === guest.hostelId);
+    const firstName = guest.name.split(' ')[0];
+    if (payment) {
+      return t('Уважаемый/ая {name}, напоминаем об оплате в размере {amount} зл, срок которой {date}. Хостел {hostel}.', { name: firstName, amount: payment.amount.toLocaleString(), date: payment.dueDate, hostel: hostel?.name || '' });
+    }
+    return t('Уважаемый/ая {name}, хостел {hostel}. По всем вопросам обращайтесь к администратору.', { name: firstName, hostel: hostel?.name || '' });
+  };
+
+  const openSmsPreview = (guest: any) => {
+    const overdue = payments.find(p => p.guestId === guest.id && p.status === 'overdue');
+    const payment = overdue || payments.find(p => p.guestId === guest.id && p.status === 'pending');
+    setSmsPreview({ text: getSmsText(guest, payment), guestId: guest.id, paymentId: payment?.id || '' });
+  };
+
+  const confirmSendSms = () => {
+    if (!smsPreview) return;
+    if (smsPreview.paymentId) {
+      updatePayment(smsPreview.paymentId, { smsSent: true });
+    }
+    setSmsPreview(null);
+  };
 
   const filtered = guests.filter(g => {
     const matchesSearch = g.name.toLowerCase().includes(search.toLowerCase()) || g.phone.includes(search);
@@ -127,6 +151,17 @@ export default function AllGuests() {
                       type="button"
                       onClick={e => {
                         e.stopPropagation();
+                        openSmsPreview(guest);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors whitespace-nowrap shrink-0"
+                      title={t('Отправить SMS')}
+                    >
+                      <Send size={12} /> {t('Отправить SMS')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
                         window.location.href = `tel:${guest.phone.replace(/\s/g, '')}`;
                       }}
                       className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors shrink-0"
@@ -149,7 +184,7 @@ export default function AllGuests() {
                   <th className="px-6 py-3 font-medium text-gray-400">{t('Срок')}</th>
                   <th className="px-6 py-3 font-medium text-gray-400 text-right">{t('Сумма')}</th>
                   <th className="px-6 py-3 font-medium text-gray-400 text-right">{t('Статус')}</th>
-                  <th className="px-6 py-3 w-10"></th>
+                  <th className="px-6 py-3 w-28"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -180,14 +215,24 @@ export default function AllGuests() {
                         </span>
                       </td>
                       <td className="px-6 py-3">
-                        <a
-                          href={`tel:${guest.phone.replace(/\s/g, '')}`}
-                          onClick={e => e.stopPropagation()}
-                          className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors"
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`tel:${guest.phone.replace(/\s/g, '')}`}
+                            onClick={e => e.stopPropagation()}
+                            className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors"
 title={t('Позвонить: {phone}', { phone: guest.phone })}
-                        >
-                          <Phone size={14} />
-                        </a>
+                          >
+                            <Phone size={14} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={e => { e.stopPropagation(); openSmsPreview(guest); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors whitespace-nowrap"
+                            title={t('Отправить SMS')}
+                          >
+                            <Send size={12} /> {t('Отправить SMS')}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -200,6 +245,35 @@ title={t('Позвонить: {phone}', { phone: guest.phone })}
 
       <Modal isOpen={showAddGuest} onClose={() => setShowAddGuest(false)} title={t('Добавить гостя')}>
         <AddGuestForm onClose={() => setShowAddGuest(false)} />
+      </Modal>
+
+      <Modal isOpen={!!smsPreview} onClose={() => setSmsPreview(null)} title={t('Отправка SMS')}>
+        {smsPreview && (
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-200">
+                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">
+                  {(guests.find(g => g.id === smsPreview.guestId)?.name || '')[0]}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{guests.find(g => g.id === smsPreview.guestId)?.name}</p>
+                  <p className="text-xs text-gray-400">{guests.find(g => g.id === smsPreview.guestId)?.phone}</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{smsPreview.text}</p>
+              <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-200">{t('{n} символов', { n: smsPreview.text.length })}</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setSmsPreview(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">
+                {t('Отмена')}
+              </button>
+              <button onClick={confirmSendSms} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-sm inline-flex items-center justify-center gap-2">
+                <Send size={14} />
+                {t('Отправить')}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
