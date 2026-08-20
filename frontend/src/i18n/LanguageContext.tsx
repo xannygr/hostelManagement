@@ -50,11 +50,7 @@ function pluralIndex(n: number): 0 | 1 | 2 {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('ru');
-
-  useEffect(() => {
-    setLangState(readLang());
-  }, []);
+  const [lang, setLangState] = useState<Lang>(readLang);
 
   useEffect(() => {
     document.documentElement.lang = lang;

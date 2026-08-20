@@ -41,6 +41,7 @@ export default function Login() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 type="text"
                 required
+                placeholder={t('Email или имя пользователя')}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
