@@ -42,7 +42,6 @@ export default function Login() {
                 type="text"
                 required
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="admin@hostel.com"
               />
             </div>
 
@@ -76,13 +75,6 @@ export default function Login() {
         <p className="text-center text-white/40 text-xs mt-6">
           {t('Данные защищены. Доступ только для администраторов.')}
         </p>
-
-        <div className="mt-4 rounded-xl bg-white/10 border border-white/15 p-4 text-center">
-          <p className="text-white/80 text-xs font-medium">{t('Регистрация закрыта — учётные записи создаёт администратор')}</p>
-          <p className="text-white/50 text-xs mt-1">
-            {t('Демо-доступ:')} <span className="text-white/80 font-mono">admin@hostel.com</span> / <span className="text-white/80 font-mono">admin123</span>
-          </p>
-        </div>
       </div>
     </div>
   );
