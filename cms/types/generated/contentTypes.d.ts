@@ -461,6 +461,9 @@ export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     email: Schema.Attribute.Email;
     hostel: Schema.Attribute.Relation<'manyToOne', 'api::hostel.hostel'>;
+    language: Schema.Attribute.Enumeration<
+      ['ru', 'uk', 'pl', 'en', 'de', 'es', 'fr', 'other']
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::guest.guest'> &
       Schema.Attribute.Private;

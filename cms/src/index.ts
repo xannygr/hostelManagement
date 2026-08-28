@@ -8,6 +8,14 @@ const mockData = () => {
   return JSON.parse(readFileSync(file, 'utf8'));
 };
 
+const REAL_HOSTELS_FILE = 'data/hostels_2026.json';
+
+function readRealHostels(): { name: string; address: string; floors?: number; rooms: { number: string; floor: number; beds: number }[] }[] {
+  const file = path.join(process.cwd(), REAL_HOSTELS_FILE);
+  if (!existsSync(file)) return [];
+  return JSON.parse(readFileSync(file, 'utf8')).hostels;
+}
+
 const CONTENT_TYPES = ['api::hostel.hostel', 'api::room.room', 'api::guest.guest', 'api::payment.payment'];
 
 async function downloadPhoto(url: string): Promise<Buffer> {
@@ -357,6 +365,53 @@ async function seed(strapi: Core.Strapi) {
   strapi.log.info('[seed] demo data imported from mock.json');
 }
 
+// Реальные хостелы из hostels_2026.json (структура комнат согласована с
+// «Untitled spreadsheet.xlsx»). Идемпотентно: хостел с таким именем уже в БД
+// пропускается целиком вместе со своими комнатами.
+async function seedRealHostels(strapi: Core.Strapi) {
+  const hostels = readRealHostels();
+  if (hostels.length === 0) return;
+
+  const existingNames = new Set(
+    (await strapi.db.query('api::hostel.hostel').findMany({ select: ['name'] })).map((h) => h.name),
+  );
+  let added = 0;
+
+  for (const h of hostels) {
+    if (existingNames.has(h.name)) continue;
+
+    const created = await strapi.documents('api::hostel.hostel').create({
+      data: {
+        name: h.name,
+        address: h.address,
+        floors: h.floors ?? 1,
+      },
+      status: 'published',
+    });
+    existingNames.add(h.name);
+    const hostelId = Number(created.id);
+
+    for (const r of h.rooms) {
+      await strapi.documents('api::room.room').create({
+        data: {
+          number: r.number,
+          floor: r.floor,
+          beds: r.beds,
+          type: 'standard',
+          pricePerBed: 85,
+          hostel: hostelId,
+        },
+        status: 'published',
+      });
+    }
+
+    added += 1;
+    strapi.log.info(`[seed] real hostel "${h.name}" (${h.rooms.length} rooms) imported`);
+  }
+
+  if (added > 0) strapi.log.info(`[seed] imported ${added} real hostels from hostels_2026.json`);
+}
+
 // «Самолечение» медиа. На Railway файлы в /app/public/uploads не переживают
 // рестарт контейнера (эфемерный диск), хотя записи в БД остаются. На каждом
 // старте проверяем наличие файлов на диске и перезаливаем недостающие из
@@ -472,6 +527,7 @@ export default {
       await seedPermissions(strapi);
       await ensureDefaultAdmin(strapi);
       await seed(strapi);
+      await seedRealHostels(strapi);
       await runMediaHeal(strapi);
     })();
   },

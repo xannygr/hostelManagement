@@ -1,0 +1,555 @@
+{
+  "hostels": [
+    {
+      "name": "Łomianki",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "5",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "6",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "7",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "8",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "9",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "10",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "11",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "15",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "16",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "П1",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "П2",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "П3",
+          "floor": 1,
+          "beds": 1
+        }
+      ]
+    },
+    {
+      "name": "Stare_Babice",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "5",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "6",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "7",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "8",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "1P",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "2P",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "3P",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "4P",
+          "floor": 1,
+          "beds": 4
+        }
+      ]
+    },
+    {
+      "name": "Bemowo",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "Bemowo01",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo02",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo03",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo04",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "Bemowo05",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo06",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "Bemowo07",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "Bemowo08",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo09",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo10",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "Bemowo11",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "Bemowo12",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "Bemowo13",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo14",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "Bemowo15",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "Bemowo16",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "Bemowo17",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo18",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "Bemowo19",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "Bemowo20",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "Bemowo21",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "Bemowo22",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "Bemowo23",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "Bemowo24",
+          "floor": 1,
+          "beds": 4
+        }
+      ]
+    },
+    {
+      "name": "Białołęka",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 3
+        }
+      ]
+    },
+    {
+      "name": "Piaseczno",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 4
+        }
+      ]
+    },
+    {
+      "name": "Józefosław",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "Квартира",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "5",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "6",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "7",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "8",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "9",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "10",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "11",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "12",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "1P",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "2P",
+          "floor": 1,
+          "beds": 1
+        }
+      ]
+    },
+    {
+      "name": "Targówek",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "5",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "6",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "7",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "8",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "9",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "10",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "11",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "12",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "13",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "14",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "15",
+          "floor": 1,
+          "beds": 1
+        }
+      ]
+    },
+    {
+      "name": "Wawer",
+      "address": "адрес не указан",
+      "floors": 1,
+      "rooms": [
+        {
+          "number": "1",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "2",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "3",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "4",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "5",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "6",
+          "floor": 1,
+          "beds": 2
+        },
+        {
+          "number": "7",
+          "floor": 1,
+          "beds": 3
+        },
+        {
+          "number": "8",
+          "floor": 1,
+          "beds": 4
+        },
+        {
+          "number": "9",
+          "floor": 1,
+          "beds": 1
+        },
+        {
+          "number": "10",
+          "floor": 1,
+          "beds": 2
+        }
+      ]
+    }
+  ]
+}
