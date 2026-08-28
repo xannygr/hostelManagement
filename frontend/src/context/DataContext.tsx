@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Hostel, Room, Guest, Payment } from '../types';
+import type { Expense, Hostel, Room, Guest, Payment } from '../types';
 import { api, loadAll, fetchHostelStats, type HostelStatsData } from '../api';
 import { useAuth } from './AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -11,6 +11,7 @@ interface DataContextType {
   rooms: Room[];
   guests: Guest[];
   payments: Payment[];
+  expenses: Expense[];
   stats: HostelStatsData | undefined;
   loading: boolean;
   error: string | null;
@@ -29,6 +30,7 @@ interface DataContextType {
   updateRoom: (id: string, data: Partial<Room>) => void;
   addRoom: (room: Omit<Room, 'id' | 'occupiedBeds'>) => void;
   updatePayment: (id: string, data: Partial<Payment>) => void;
+  saveExpense: (expense: Omit<Expense, 'id'>, id?: string) => void;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -170,6 +172,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .catch((e) => fail(e, t('Не удалось обновить платёж')));
   };
 
+  const saveExpense = (expense: Omit<Expense, 'id'>, id?: string) => {
+    api.saveExpense(expense, id)
+      .then(() => { invalidateAll(); notify('success', t('Расходы сохранены')); })
+      .catch((e) => fail(e, t('Не удалось сохранить расходы')));
+  };
+
   const data = query.data;
 
   return (
@@ -179,6 +187,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         rooms: data?.rooms ?? [],
         guests: data?.guests ?? [],
         payments: data?.payments ?? [],
+        expenses: data?.expenses ?? [],
         stats: statsQuery.data,
         loading: query.isLoading,
         error: query.isError ? t('Не удалось загрузить данные с сервера. Проверьте, что бекенд запущен: npm run dev:backend') : null,
@@ -196,6 +205,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateRoom,
         addRoom,
         updatePayment,
+        saveExpense,
       }}
     >
       {children}

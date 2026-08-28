@@ -1,4 +1,4 @@
-import type { Guest, GuestLanguage, Hostel, Payment, Room } from './types';
+import type { Expense, Guest, GuestLanguage, Hostel, Payment, Room } from './types';
 
 const BASE = '/api';
 const TOKEN_KEY = 'hostelhaven_token';
@@ -57,6 +57,7 @@ interface RawHostel {
   parking?: string | null;
   showers?: number | null;
   toilets?: number | null;
+  rent?: number | null;
   image?: { url: string } | null;
 }
 
@@ -106,11 +107,28 @@ interface RawPayment {
   guest: (RawGuest & { room: RawRef | null }) | null;
 }
 
+interface RawExpense {
+  id: number;
+  documentId: string;
+  month: string;
+  rentPaid: number | null;
+  gasDue: number | null;
+  gasPaid: number | null;
+  lightsDue: number | null;
+  lightsPaid: number | null;
+  internetDue: number | null;
+  internetPaid: number | null;
+  waterDue: number | null;
+  waterPaid: number | null;
+  hostel: RawRef | null;
+}
+
 export interface AllData {
   hostels: Hostel[];
   rooms: Room[];
   guests: Guest[];
   payments: Payment[];
+  expenses: Expense[];
 }
 
 export interface HostelStat {
@@ -158,6 +176,7 @@ function normalizeHostel(h: RawHostel, rooms: Room[], guests: Guest[], payments:
     parking: h.parking ?? undefined,
     showers: h.showers ?? undefined,
     toilets: h.toilets ?? undefined,
+    rent: h.rent ?? undefined,
     image: mediaUrl(h.image),
   };
 }
@@ -180,8 +199,24 @@ export function normalizeAllData(
   rawRooms: RawRoom[],
   rawGuests: RawGuest[],
   rawPayments: RawPayment[],
-  today = todayStr()
+  today = todayStr(),
+  rawExpenses: RawExpense[] = []
 ): AllData {
+  const expenses: Expense[] = rawExpenses.map((e) => ({
+    id: e.documentId,
+    hostelId: e.hostel?.documentId ?? '',
+    month: e.month,
+    rentPaid: e.rentPaid ?? 0,
+    gasDue: e.gasDue ?? 0,
+    gasPaid: e.gasPaid ?? 0,
+    lightsDue: e.lightsDue ?? 0,
+    lightsPaid: e.lightsPaid ?? 0,
+    internetDue: e.internetDue ?? 0,
+    internetPaid: e.internetPaid ?? 0,
+    waterDue: e.waterDue ?? 0,
+    waterPaid: e.waterPaid ?? 0,
+  }));
+
   const payments: Payment[] = rawPayments.map((p) => ({
     id: p.documentId,
     guestId: p.guest?.documentId ?? '',
@@ -235,7 +270,7 @@ export function normalizeAllData(
 
   const hostels: Hostel[] = rawHostels.map((h) => normalizeHostel(h, rooms, guests, payments));
 
-  return { hostels, rooms, guests, payments };
+  return { hostels, rooms, guests, payments, expenses };
 }
 
 export function loadAll(): Promise<AllData> {
@@ -244,8 +279,9 @@ export function loadAll(): Promise<AllData> {
     fetchAllPages<RawRoom>('/rooms?populate[hostel]=true&populate[photos]=true'),
     fetchAllPages<RawGuest>('/guests?populate[hostel]=true&populate[room]=true'),
     fetchAllPages<RawPayment>('/payments?populate[guest][populate][room]=true'),
-  ]).then(([rawHostels, rawRooms, rawGuests, rawPayments]) =>
-    normalizeAllData(rawHostels, rawRooms, rawGuests, rawPayments)
+    fetchAllPages<RawExpense>('/expenses?populate[hostel]=true'),
+  ]).then(([rawHostels, rawRooms, rawGuests, rawPayments, rawExpenses]) =>
+    normalizeAllData(rawHostels, rawRooms, rawGuests, rawPayments, todayStr(), rawExpenses)
   );
 }
 
@@ -355,6 +391,7 @@ export const api = {
     if (data.parking !== undefined) payload.parking = data.parking;
     if (data.showers !== undefined) payload.showers = data.showers;
     if (data.toilets !== undefined) payload.toilets = data.toilets;
+    if (data.rent !== undefined) payload.rent = data.rent;
     return request<{ data: RawHostel }>(`/hostels/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ data: payload }),
@@ -568,5 +605,44 @@ export const api = {
     const matches = raw.filter((r) => r.type === type);
     await Promise.all(matches.map((r) => api.updateRoom(r.documentId, { pricePerBed })));
     return { ok: true };
+  },
+
+  saveExpense: (expense: Omit<Expense, 'id'>, id?: string): Promise<Expense> => {
+    const payload = {
+      month: expense.month,
+      rentPaid: expense.rentPaid,
+      gasDue: expense.gasDue,
+      gasPaid: expense.gasPaid,
+      lightsDue: expense.lightsDue,
+      lightsPaid: expense.lightsPaid,
+      internetDue: expense.internetDue,
+      internetPaid: expense.internetPaid,
+      waterDue: expense.waterDue,
+      waterPaid: expense.waterPaid,
+    };
+    const done = (raw: RawExpense) => ({
+      id: raw.documentId,
+      hostelId: raw.hostel?.documentId ?? expense.hostelId,
+      month: raw.month,
+      rentPaid: raw.rentPaid ?? 0,
+      gasDue: raw.gasDue ?? 0,
+      gasPaid: raw.gasPaid ?? 0,
+      lightsDue: raw.lightsDue ?? 0,
+      lightsPaid: raw.lightsPaid ?? 0,
+      internetDue: raw.internetDue ?? 0,
+      internetPaid: raw.internetPaid ?? 0,
+      waterDue: raw.waterDue ?? 0,
+      waterPaid: raw.waterPaid ?? 0,
+    });
+    if (id) {
+      return request<{ data: RawExpense }>(`/expenses/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ data: payload }),
+      }).then(({ data }) => done(data));
+    }
+    return request<{ data: RawExpense }>('/expenses', {
+      method: 'POST',
+      body: JSON.stringify({ data: { ...payload, hostel: { connect: [expense.hostelId] } } }),
+    }).then(({ data }) => done(data));
   },
 };

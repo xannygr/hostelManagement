@@ -4,20 +4,20 @@ import Link from 'next/link';
 import {
   ArrowLeft, Users, BedDouble, DollarSign,
   Plus, Search, Phone, Calendar, AlertTriangle,
-  ChevronRight, DoorOpen, LayoutGrid, Clock, ArrowDownToLine, ArrowUpFromLine, Send, Filter, BarChart3, Edit3, X, UserPlus
+  ChevronRight, DoorOpen, LayoutGrid, Clock, ArrowDownToLine, ArrowUpFromLine, Send, Filter, BarChart3, Edit3, X, UserPlus, ChevronLeft
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { roomOccupiedBeds, hostelOccupiedBeds, guestTotalPaid, guestTotalDue, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 import RoomDatePicker from '../components/RoomDatePicker';
-import type { GuestLanguage, Room } from '../types';
+import type { Expense, GuestLanguage, Hostel, Room } from '../types';
 
-type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' | 'analytics';
+type Tab = 'map' | 'schedule' | 'guests' | 'residents' | 'debtors' | 'payments' | 'analytics' | 'expenses';
 
 export default function HostelDetail() {
   const { id } = useParams<{ id: string }>();
-  const { hostels, rooms, guests, payments, updateHostel, addRoom } = useData();
+  const { hostels, rooms, guests, payments, expenses, updateHostel, addRoom } = useData();
   const { t, tp } = useLanguage();
   const hostel = hostels.find(h => h.id === id);
   const [activeTab, setActiveTab] = useState<Tab>('map');
@@ -31,6 +31,7 @@ export default function HostelDetail() {
   const [editParking, setEditParking] = useState('');
   const [editShowers, setEditShowers] = useState<number | undefined>();
   const [editToilets, setEditToilets] = useState<number | undefined>();
+  const [editRent, setEditRent] = useState<number | undefined>();
   const [newRoomNumber, setNewRoomNumber] = useState('');
   const [newRoomFloor, setNewRoomFloor] = useState(1);
   const [newRoomBeds, setNewRoomBeds] = useState(2);
@@ -61,6 +62,7 @@ export default function HostelDetail() {
     { key: 'debtors', label: t('Должники'), count: debtors.length, icon: <AlertTriangle size={16} /> },
     { key: 'guests', label: t('Все гости'), count: hostelGuests.length, icon: <Users size={16} /> },
     { key: 'payments', label: t('Платежи'), count: hostelPayments.length, icon: <DollarSign size={16} /> },
+    { key: 'expenses', label: t('Расходы'), icon: <DollarSign size={16} /> },
     { key: 'analytics', label: t('Аналитика'), icon: <BarChart3 size={16} /> },
   ];
 
@@ -117,7 +119,7 @@ export default function HostelDetail() {
               )}
             </div>
           </div>
-          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setEditRent(hostel.rent ?? 0); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
             <            Edit3 size={16} />
             {t('Редактировать')}
           </button>
@@ -180,6 +182,7 @@ export default function HostelDetail() {
             <ResidentsList guests={activeGuests} search={searchQuery} paymentFilter={residentPaymentFilter} />
           </>}
           {activeTab === 'debtors' && <><TabActions search={searchQuery} onSearch={setSearchQuery} /><DebtorsList guests={debtors} search={searchQuery} /></>}
+          {activeTab === 'expenses' && <ExpensesBoard hostel={hostel} expenses={expenses.filter(e => e.hostelId === hostel.id)} />}
         </div>
         {activeTab === 'payments' && (
           <div>
@@ -190,7 +193,7 @@ export default function HostelDetail() {
             <PaymentsList payments={hostelPayments} search={searchQuery} statusFilter={paymentStatusFilter} typeFilter={paymentTypeFilter} />
           </div>
         )}
-        {activeTab !== 'payments' && activeTab !== 'map' && activeTab !== 'schedule' && activeTab !== 'guests' && activeTab !== 'debtors' && activeTab !== 'residents' && (
+        {activeTab !== 'payments' && activeTab !== 'map' && activeTab !== 'schedule' && activeTab !== 'guests' && activeTab !== 'debtors' && activeTab !== 'residents' && activeTab !== 'expenses' && (
           <div className="p-6">
             {activeTab === 'analytics' && <Analytics rooms={hostelRooms} guests={hostelGuests} payments={hostelPayments} totalBeds={hostel.totalBeds} />}
           </div>
@@ -212,6 +215,7 @@ export default function HostelDetail() {
             parking: editParking,
             showers: editShowers,
             toilets: editToilets,
+            rent: editRent,
           });
           if (newRoomNumber.trim()) {
             addRoom({
@@ -258,6 +262,10 @@ export default function HostelDetail() {
               <div>
                 <label className="block text-xs text-gray-400 mb-1">{t('Туалеты')}</label>
                 <input type="number" min={0} value={editToilets ?? ''} onChange={e => setEditToilets(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">{t('Аренда (зл/мес)')}</label>
+                <input type="number" min={0} step="any" value={editRent ?? ''} onChange={e => setEditRent(e.target.value === '' ? undefined : Number(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
           </div>
@@ -2003,5 +2011,193 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
         <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>
       </div>
     </form>
+  );
+}
+
+function emptyExpense(hostelId: string, month: string): Expense {
+  return {
+    id: '',
+    hostelId,
+    month,
+    rentPaid: 0,
+    gasDue: 0,
+    gasPaid: 0,
+    lightsDue: 0,
+    lightsPaid: 0,
+    internetDue: 0,
+    internetPaid: 0,
+    waterDue: 0,
+    waterPaid: 0,
+  };
+}
+
+type ExpenseField = Exclude<keyof Expense, 'id' | 'hostelId' | 'month'>;
+
+function ExpensesBoard({ hostel, expenses }: { hostel: Hostel; expenses: Expense[] }) {
+  const { t, monthFull, locale } = useLanguage();
+  const { saveExpense } = useData();
+  const now = new Date();
+  const [month, setMonth] = useState<string>(() => `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+
+  const record = expenses.find(e => e.month === month);
+  const [draft, setDraft] = useState<Expense>(() => emptyExpense(hostel.id, month));
+
+  useEffect(() => {
+    setDraft(record ? { ...emptyExpense(hostel.id, month), ...record } : emptyExpense(hostel.id, month));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month, record?.id]);
+
+  const setField = (key: ExpenseField, value: number) => {
+    const v = Number.isFinite(value) && value >= 0 ? value : 0;
+    setDraft(d => ({ ...d, [key]: v }));
+  };
+
+  const dueKey = (key: ExpenseField): ExpenseField =>
+    key === 'gasPaid' ? 'gasDue'
+      : key === 'lightsPaid' ? 'lightsDue'
+        : key === 'internetPaid' ? 'internetDue'
+          : 'waterDue';
+
+  const changeMonth = (delta: number) => {
+    const [y, m] = month.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const monthName = (() => {
+    const [y, m] = month.split('-').map(Number);
+    const months = monthFull ?? [];
+    return `${months[(m - 1) % 12] ?? m} ${y}`;
+  })();
+
+  const rows: {
+    key: ExpenseField;
+    label: string;
+    due: number;
+    dueInput?: boolean;
+    paid: number;
+    note?: string;
+  }[] = [
+    {
+      key: 'rentPaid',
+      label: t('Аренда'),
+      due: hostel.rent ?? 0,
+      paid: draft.rentPaid,
+      note: t('постоянная'),
+    },
+    { key: 'gasPaid', label: t('Газ'), due: draft.gasDue, dueInput: true, paid: draft.gasPaid },
+    { key: 'lightsPaid', label: t('Свет'), due: draft.lightsDue, dueInput: true, paid: draft.lightsPaid },
+    { key: 'internetPaid', label: t('Интернет'), due: draft.internetDue, dueInput: true, paid: draft.internetPaid },
+    { key: 'waterPaid', label: t('Вода'), due: draft.waterDue, dueInput: true, paid: draft.waterPaid },
+  ];
+
+  const totalDue = rows.reduce((s, r) => s + (r.due || 0), 0);
+  const totalPaid = rows.reduce((s, r) => s + (r.paid || 0), 0);
+  const totalLeft = totalDue - totalPaid;
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <p className="text-sm text-gray-400">
+          {t('Заполните суммы к оплате и сколько уже оплачено — они сохраняются по месяцам')}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => changeMonth(-1)}
+            className="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            title={t('Предыдущий месяц')}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 whitespace-nowrap">
+            {monthName}
+          </span>
+          <button
+            onClick={() => changeMonth(1)}
+            className="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            title={t('Следующий месяц')}
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-100 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="px-4 py-3 font-medium text-gray-400">{t('Категория')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('К оплате (зл)')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('Оплачено (зл)')}</th>
+              <th className="px-4 py-3 font-medium text-gray-400 text-right">{t('Остаток')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {rows.map(r => (
+              <tr key={r.key} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3">
+                  <span className="font-medium text-gray-900">{r.label}</span>
+                  {r.note && <span className="ml-2 text-xs text-gray-400">{r.note}</span>}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {r.dueInput ? (
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={r.due || ''}
+                      onChange={e => setField(dueKey(r.key), Number(e.target.value))}
+                      className="w-28 ml-auto text-right px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums"
+                    />
+                  ) : (
+                    <span className="inline-block px-3 py-2 text-gray-700 font-medium tabular-nums">{r.due || 0}</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={r.paid || ''}
+                    onChange={e => setField(r.key, Number(e.target.value))}
+                    className="w-28 ml-auto text-right px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums"
+                  />
+                </td>
+                <td className={`px-4 py-3 text-right font-medium tabular-nums ${((r.due || 0) - (r.paid || 0)) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  {((r.due || 0) - (r.paid || 0)).toLocaleString(locale, { maximumFractionDigits: 2 })}
+                </td>
+              </tr>
+            ))}
+            <tr className="bg-gray-50">
+              <td className="px-4 py-3 font-semibold text-gray-900">{t('Итого')}</td>
+              <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums">{totalDue.toLocaleString(locale, { maximumFractionDigits: 2 })}</td>
+              <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums">{totalPaid.toLocaleString(locale, { maximumFractionDigits: 2 })}</td>
+              <td className={`px-4 py-3 text-right font-semibold tabular-nums ${totalLeft > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{totalLeft.toLocaleString(locale, { maximumFractionDigits: 2 })}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex justify-end mt-5">
+        <button
+          onClick={() => saveExpense({
+            hostelId: hostel.id,
+            month,
+            rentPaid: draft.rentPaid,
+            gasDue: draft.gasDue,
+            gasPaid: draft.gasPaid,
+            lightsDue: draft.lightsDue,
+            lightsPaid: draft.lightsPaid,
+            internetDue: draft.internetDue,
+            internetPaid: draft.internetPaid,
+            waterDue: draft.waterDue,
+            waterPaid: draft.waterPaid,
+          }, record?.id)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+        >
+          {t('Сохранить')}
+        </button>
+      </div>
+    </div>
   );
 }

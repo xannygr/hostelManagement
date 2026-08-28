@@ -16,7 +16,7 @@ function readRealHostels(): { name: string; address: string; floors?: number; ro
   return JSON.parse(readFileSync(file, 'utf8')).hostels;
 }
 
-const CONTENT_TYPES = ['api::hostel.hostel', 'api::room.room', 'api::guest.guest', 'api::payment.payment'];
+const CONTENT_TYPES = ['api::hostel.hostel', 'api::room.room', 'api::guest.guest', 'api::payment.payment', 'api::expense.expense'];
 
 async function downloadPhoto(url: string): Promise<Buffer> {
   // Без таймаута зависший fetch (сеть от Railway до Unsplash) заблокировал бы

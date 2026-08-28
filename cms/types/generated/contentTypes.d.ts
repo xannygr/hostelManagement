@@ -443,6 +443,98 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiExpenseExpense extends Struct.CollectionTypeSchema {
+  collectionName: 'expenses';
+  info: {
+    displayName: 'Expense';
+    pluralName: 'expenses';
+    singularName: 'expense';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    gasDue: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    gasPaid: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    hostel: Schema.Attribute.Relation<'manyToOne', 'api::hostel.hostel'>;
+    internetDue: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    internetPaid: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    lightsDue: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    lightsPaid: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::expense.expense'
+    > &
+      Schema.Attribute.Private;
+    month: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    rentPaid: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    waterDue: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    waterPaid: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+  };
+}
+
 export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
   collectionName: 'guests';
   info: {
@@ -506,6 +598,7 @@ export interface ApiHostelHostel extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    expenses: Schema.Attribute.Relation<'oneToMany', 'api::expense.expense'>;
     floors: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -535,6 +628,13 @@ export interface ApiHostelHostel extends Struct.CollectionTypeSchema {
       }>;
     parking: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    rent: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
     rooms: Schema.Attribute.Relation<'oneToMany', 'api::room.room'>;
     showers: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
@@ -1161,6 +1261,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::expense.expense': ApiExpenseExpense;
       'api::guest.guest': ApiGuestGuest;
       'api::hostel.hostel': ApiHostelHostel;
       'api::payment.payment': ApiPaymentPayment;

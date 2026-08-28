@@ -40,6 +40,10 @@
       "type": "integer",
       "min": 0
     },
+    "rent": {
+      "type": "decimal",
+      "min": 0
+    },
     "image": {
       "type": "media",
       "multiple": false,
@@ -57,6 +61,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::guest.guest",
+      "mappedBy": "hostel"
+    },
+    "expenses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::expense.expense",
       "mappedBy": "hostel"
     }
   }

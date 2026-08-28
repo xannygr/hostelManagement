@@ -12,6 +12,7 @@ export interface Hostel {
   parking?: string;
   showers?: number;
   toilets?: number;
+  rent?: number;
 }
 
 export interface Room {
@@ -57,4 +58,21 @@ export interface Payment {
   type: 'cash' | 'card' | 'transfer';
   status: 'paid' | 'pending' | 'overdue';
   smsSent: boolean;
+}
+
+export type ExpenseCategory = 'gas' | 'lights' | 'internet' | 'water';
+
+export interface Expense {
+  id: string;
+  hostelId: string;
+  month: string;
+  rentPaid: number;
+  gasDue: number;
+  gasPaid: number;
+  lightsDue: number;
+  lightsPaid: number;
+  internetDue: number;
+  internetPaid: number;
+  waterDue: number;
+  waterPaid: number;
 }

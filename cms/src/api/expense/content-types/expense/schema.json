@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "expenses",
+  "info": {
+    "singularName": "expense",
+    "pluralName": "expenses",
+    "displayName": "Expense"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "month": {
+      "type": "string",
+      "required": true,
+      "pattern": "^\\d{4}-\\d{2}$"
+    },
+    "rentPaid": {
+      "type": "decimal",
+      "min": 0
+    },
+    "gasDue": {
+      "type": "decimal",
+      "min": 0
+    },
+    "gasPaid": {
+      "type": "decimal",
+      "min": 0
+    },
+    "lightsDue": {
+      "type": "decimal",
+      "min": 0
+    },
+    "lightsPaid": {
+      "type": "decimal",
+      "min": 0
+    },
+    "internetDue": {
+      "type": "decimal",
+      "min": 0
+    },
+    "internetPaid": {
+      "type": "decimal",
+      "min": 0
+    },
+    "waterDue": {
+      "type": "decimal",
+      "min": 0
+    },
+    "waterPaid": {
+      "type": "decimal",
+      "min": 0
+    },
+    "hostel": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::hostel.hostel",
+      "inversedBy": "expenses"
+    }
+  }
+}

@@ -194,4 +194,51 @@ describe('normalizeAllData — hostels', () => {
     const { hostels: out } = normalizeAllData(hostels, [], [guestInHostel, outsideGuest], [paidHere, paidOutside]);
     expect(out[0].monthlyRevenue).toBe(100);
   });
+
+  it('maps hostel rent when present', () => {
+    const { hostels: out } = normalizeAllData([rawHostel({ rent: 6000 })], [], [], []);
+    expect(out[0].rent).toBe(6000);
+  });
+});
+
+describe('normalizeAllData — expenses', () => {
+  const rawExpense = (over: Partial<NonNullable<Parameters<typeof normalizeAllData>[5]>[number]> = {}) => ({
+    id: 1,
+    documentId: 'exp1',
+    month: '2026-08',
+    rentPaid: 6000,
+    gasDue: 500,
+    gasPaid: 300,
+    lightsDue: 0,
+    lightsPaid: 0,
+    internetDue: 0,
+    internetPaid: 0,
+    waterDue: 0,
+    waterPaid: 0,
+    hostel: { id: 1, documentId: 'host1' },
+    ...over,
+  });
+
+  it('maps fields and flattens the hostel reference with default zeroes', () => {
+    const { expenses } = normalizeAllData([], [], [], [], '2026-08-28', [rawExpense({ hostel: null, rentPaid: null })]);
+    expect(expenses[0]).toEqual({
+      id: 'exp1',
+      hostelId: '',
+      month: '2026-08',
+      rentPaid: 0,
+      gasDue: 500,
+      gasPaid: 300,
+      lightsDue: 0,
+      lightsPaid: 0,
+      internetDue: 0,
+      internetPaid: 0,
+      waterDue: 0,
+      waterPaid: 0,
+    });
+  });
+
+  it('returns empty arrays when no expenses provided', () => {
+    const { expenses } = normalizeAllData([], [], [], []);
+    expect(expenses).toEqual([]);
+  });
 });
