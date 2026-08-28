@@ -22,6 +22,9 @@ cms/.tmp
 cms/build
 cms/dist
 
+# Spreadsheets (local working data)
+*.xlsx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
