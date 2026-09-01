@@ -406,8 +406,6 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                   const isFull = actualOccupied === room.beds;
                   const isEmpty = actualOccupied === 0;
                   const roomGuests = guests.filter(g => g.roomId === room.id && g.status === 'active');
-                  const todayCheckin = roomGuests.filter(g => g.checkIn === today);
-                  const todayCheckout = roomGuests.filter(g => g.checkOut === today);
 
                   let borderColor = 'border-emerald-300 bg-emerald-50';
                   let bedColor = 'bg-emerald-400';
@@ -463,12 +461,6 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                           <UserPlus size={12} /> {t('Добавить гостя')}
                         </button>
                       </div>
-                      {(todayCheckin.length > 0 || todayCheckout.length > 0) && (
-                        <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-md border border-gray-100 p-1">
-                          {todayCheckin.length > 0 && <ArrowDownToLine size={12} className="text-emerald-500" />}
-                          {todayCheckout.length > 0 && <ArrowUpFromLine size={12} className="text-amber-500" />}
-                        </div>
-                      )}
                     </Link>
                   );
                 })}
