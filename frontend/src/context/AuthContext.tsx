@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { login as apiLogin, logout as apiLogout, setToken, type AuthUser } from '../api';
+import { login as apiLogin, logout as apiLogout, setToken, UNAUTHORIZED_EVENT, type AuthUser } from '../api';
 
 const USER_KEY = 'hostelhaven_user';
 
@@ -29,6 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUser(readUser());
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    const onUnauthorized = () => {
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   }, []);
 
   const login = async (identifier: string, password: string) => {

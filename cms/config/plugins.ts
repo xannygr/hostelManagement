@@ -29,7 +29,7 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
     config: {
       jwtSecret: env('JWT_SECRET', crypto.randomBytes(16).toString('base64')),
       jwt: {
-        expiresIn: '7d',
+        expiresIn: '30d',
       },
       ratelimit: {
         enabled: true,

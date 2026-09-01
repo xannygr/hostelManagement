@@ -2,6 +2,7 @@ import type { Expense, Guest, GuestLanguage, Hostel, Payment, Room } from './typ
 
 const BASE = '/api';
 const TOKEN_KEY = 'hostelhaven_token';
+export const UNAUTHORIZED_EVENT = 'hostelhaven:unauthorized';
 
 function todayStr(): string {
   return new Date().toISOString().split('T')[0];
@@ -26,6 +27,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      }
+    }
     let message = `${res.status} ${res.statusText}`;
     try {
       const body = await res.json();
