@@ -280,7 +280,7 @@ export default function HostelDetail() {
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">{t('Этаж')}</label>
-                <input type="number" min={1} value={newRoomFloor} onChange={e => setNewRoomFloor(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" min={0} value={newRoomFloor} onChange={e => setNewRoomFloor(parseInt(e.target.value) || 0)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">{t('Кровати')}</label>

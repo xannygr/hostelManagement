@@ -666,7 +666,7 @@ function EditRoomForm({ room, onClose }: { room: { id: string; number: string; f
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Этаж')}</label>
-          <input required type="number" min={1} value={floor} onChange={e => setFloor(Number(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input required type="number" min={0} value={floor} onChange={e => setFloor(Number(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">

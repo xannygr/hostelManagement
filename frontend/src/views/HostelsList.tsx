@@ -219,7 +219,7 @@ export default function HostelsList() {
                       <input
                         type="number"
                         value={room.floor}
-                        onChange={e => updateRoom(i, 'floor', parseInt(e.target.value) || 1)}
+                        onChange={e => updateRoom(i, 'floor', parseInt(e.target.value) || 0)}
                         min={0}
                         className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
