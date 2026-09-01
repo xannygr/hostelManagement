@@ -299,7 +299,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !hostelId || !activeRoom || !checkIn) return;
+    if (!name || !hostelId || !activeRoom || !checkIn) return;
     addGuest({ name, phone, email, passport, language: language || undefined, roomId: activeRoom, hostelId, checkIn, checkOut: checkOut || undefined, paymentPeriod: period, status: 'active', totalPaid: 0, totalDue: 0 });
     onClose();
   };
@@ -328,7 +328,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
-          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>

@@ -337,7 +337,7 @@ function AddGuestRoomForm({ room, onClose }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !checkIn) return;
+    if (!name || !checkIn) return;
 
     try {
       await addGuestWithPayment(
@@ -408,7 +408,7 @@ function AddGuestRoomForm({ room, onClose }: {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
-          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>

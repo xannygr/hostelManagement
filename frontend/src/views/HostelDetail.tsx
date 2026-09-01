@@ -490,7 +490,7 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !checkIn) return;
+    if (!name || !checkIn) return;
     try {
       await addGuestWithPayment(
         {
@@ -560,7 +560,7 @@ function RoomAddGuestForm({ room, onClose }: { room: { id: string; number: strin
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
-          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>
@@ -870,7 +870,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              if (!gName || !gPhone || !gRoomId) return;
+              if (!gName || !gRoomId) return;
               const room = rooms.find((r: any) => r.id === gRoomId);
               if (!room) return;
               const daily = room.pricePerBed;
@@ -982,7 +982,7 @@ function Schedule({ rooms, guests, payments, hostel }: { rooms: any[]; guests: a
                   </div>
                 );
               })()}
-              <button type="submit" disabled={!gName || !gPhone || !gRoomId} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 transition-colors">
+              <button type="submit" disabled={!gName || !gRoomId} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 transition-colors">
                 {t('Добавить гостя')}
               </button>
             </form>
@@ -2015,7 +2015,7 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !roomId || !checkIn) return;
+    if (!name || !roomId || !checkIn) return;
     addGuest({ name, phone, email, passport, language: language || undefined, roomId, hostelId, checkIn, checkOut: checkOut || undefined, paymentPeriod: period, status: 'active', totalPaid: 0, totalDue: 0 });
     onClose();
   };
@@ -2029,7 +2029,7 @@ function AddGuestForm({ onClose, hostelId }: { onClose: () => void; hostelId: st
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Телефон')}</label>
-          <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+48 501 234 567" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Email')}</label>

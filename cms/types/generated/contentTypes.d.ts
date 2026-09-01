@@ -568,7 +568,7 @@ export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
     paymentPeriod: Schema.Attribute.Enumeration<['day', 'week', 'month']> &
       Schema.Attribute.DefaultTo<'month'>;
     payments: Schema.Attribute.Relation<'oneToMany', 'api::payment.payment'>;
-    phone: Schema.Attribute.String & Schema.Attribute.Required;
+    phone: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
     status: Schema.Attribute.Enumeration<
