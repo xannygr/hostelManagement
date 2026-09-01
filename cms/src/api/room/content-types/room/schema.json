@@ -39,6 +39,24 @@
       "required": true,
       "min": 0
     },
+    "pricePerWeek": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "pricePerMonth": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "pricingPer": {
+      "type": "enumeration",
+      "enum": [
+        "bed",
+        "room"
+      ],
+      "default": "bed"
+    },
     "hasBalcony": {
       "type": "boolean",
       "default": false

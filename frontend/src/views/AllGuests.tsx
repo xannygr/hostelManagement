@@ -3,8 +3,9 @@ import { Search, Phone, Filter, Plus, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../i18n/LanguageContext';
-import type { GuestLanguage } from '../types';
+import type { GuestLanguage, RoomPricePeriod } from '../types';
 import { guestTotalPaid, guestTotalDue, roomOccupiedBeds, GUEST_LANGUAGES } from '../utils/helpers';
+import RoomBillingSelect from '../components/RoomBillingSelect';
 import Legend from '../components/Legend';
 import Modal from '../components/Modal';
 
@@ -284,6 +285,7 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
   const { t } = useLanguage();
   const [hostelId, setHostelId] = useState(hostels[0]?.id || '');
   const [roomId, setRoomId] = useState('');
+  const [period, setPeriod] = useState<RoomPricePeriod>('month');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -294,12 +296,11 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
 
   const hostelRooms = rooms.filter(r => r.hostelId === hostelId && roomOccupiedBeds(r.id, guests) < r.beds);
   const activeRoom = roomId && hostelRooms.some(r => r.id === roomId) ? roomId : (hostelRooms[0]?.id || '');
-  const selectedRoom = rooms.find(r => r.id === activeRoom);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !hostelId || !activeRoom || !checkIn || !checkOut) return;
-    addGuest({ name, phone, email, passport, language: language || undefined, roomId: activeRoom, hostelId, checkIn, checkOut, status: 'active', totalPaid: 0, totalDue: 0 });
+    if (!name || !phone || !hostelId || !activeRoom || !checkIn) return;
+    addGuest({ name, phone, email, passport, language: language || undefined, roomId: activeRoom, hostelId, checkIn, checkOut: checkOut || undefined, paymentPeriod: period, status: 'active', totalPaid: 0, totalDue: 0 });
     onClose();
   };
 
@@ -313,17 +314,13 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
           ))}
         </select>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Комната')}</label>
-        <select required value={activeRoom} onChange={e => setRoomId(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          {hostelRooms.map(r => {
-            const occ = roomOccupiedBeds(r.id, guests);
-            return (
-              <option key={r.id} value={r.id}>{r.number} · {r.type} · {t('{n} свободных', { n: r.beds - occ })} · {t('{n} зл/кровать', { n: r.pricePerBed })}</option>
-            );
-          })}
-        </select>
-      </div>
+      <RoomBillingSelect
+        rooms={rooms}
+        guests={guests}
+        hostelId={hostelId}
+        value={{ roomId: activeRoom, period }}
+        onChange={v => { setRoomId(v.roomId); setPeriod(v.period); }}
+      />
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ян Ковальски" />
@@ -357,15 +354,10 @@ function AddGuestForm({ onClose }: { onClose: () => void }) {
           <input required type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение')}</label>
-          <input required type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение (опционально)')}</label>
+          <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
-      {selectedRoom && checkIn && checkOut && (
-        <p className="text-xs text-gray-400">
-          {t('Итого: {n} зл за период', { n: selectedRoom.pricePerBed * Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) })}
-        </p>
-      )}
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
         <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>

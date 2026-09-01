@@ -1,4 +1,4 @@
-import type { Guest, GuestLanguage, Payment } from '../types';
+import type { Guest, GuestLanguage, Payment, Room, RoomPricePeriod } from '../types';
 
 export const GUEST_LANGUAGES: { value: GuestLanguage | ''; label: string }[] = [
   { value: 'ru', label: 'Русский' },
@@ -43,9 +43,29 @@ export function guestTotalDue(guestId: string, payments: Payment[], today = new 
 }
 
 export function guestsInRoomOnDate(roomId: string, dateStr: string, guests: Guest[]): number {
-  return guests.filter(g => g.roomId === roomId && g.status === 'active' && g.checkIn <= dateStr && g.checkOut > dateStr).length;
+  return guests.filter(g =>
+    g.roomId === roomId && g.status === 'active' &&
+    g.checkIn <= dateStr &&
+    (!g.checkOut || g.checkOut > dateStr)
+  ).length;
 }
 
 export function totalOccupiedOnDate(dateStr: string, guests: Guest[]): number {
-  return guests.filter(g => g.status === 'active' && g.checkIn <= dateStr && g.checkOut > dateStr).length;
+  return guests.filter(g =>
+    g.status === 'active' &&
+    g.checkIn <= dateStr &&
+    (!g.checkOut || g.checkOut > dateStr)
+  ).length;
+}
+
+/**
+ * Возвращает цену комнаты за выбранный период (сутки/неделя/месяц).
+ * Если отдельная цена периода не задана — рассчитывается из pricePerBed.
+ */
+export function roomPriceForPeriod(room: Pick<Room, 'pricePerBed' | 'pricePerWeek' | 'pricePerMonth'>, period: RoomPricePeriod): number {
+  if (period === 'week' && (room.pricePerWeek ?? 0) > 0) return room.pricePerWeek!;
+  if (period === 'month' && (room.pricePerMonth ?? 0) > 0) return room.pricePerMonth!;
+  if (period === 'day') return room.pricePerBed;
+  if (period === 'week') return Math.round(room.pricePerBed * 7);
+  return Math.round(room.pricePerBed * 30);
 }

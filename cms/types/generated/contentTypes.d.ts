@@ -547,7 +547,7 @@ export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
   };
   attributes: {
     checkIn: Schema.Attribute.Date & Schema.Attribute.Required;
-    checkOut: Schema.Attribute.Date & Schema.Attribute.Required;
+    checkOut: Schema.Attribute.Date;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -565,6 +565,8 @@ export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
         minLength: 2;
       }>;
     passport: Schema.Attribute.String;
+    paymentPeriod: Schema.Attribute.Enumeration<['day', 'week', 'month']> &
+      Schema.Attribute.DefaultTo<'month'>;
     payments: Schema.Attribute.Relation<'oneToMany', 'api::payment.payment'>;
     phone: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
@@ -741,6 +743,24 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    pricePerMonth: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    pricePerWeek: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    pricingPer: Schema.Attribute.Enumeration<['bed', 'room']> &
+      Schema.Attribute.DefaultTo<'bed'>;
     publishedAt: Schema.Attribute.DateTime;
     type: Schema.Attribute.Enumeration<['standard', 'economy', 'vip']> &
       Schema.Attribute.Required;

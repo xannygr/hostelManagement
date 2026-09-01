@@ -69,6 +69,9 @@ interface RawRoom {
   beds: number;
   type: Room['type'];
   pricePerBed: number;
+  pricePerWeek?: number | null;
+  pricePerMonth?: number | null;
+  pricingPer?: Room['pricingPer'] | null;
   hasBalcony?: boolean | null;
   hasPrivateBathroom?: boolean | null;
   photos?: { url: string }[];
@@ -83,8 +86,9 @@ interface RawGuest {
   email: string | null;
   passport: string | null;
   language?: GuestLanguage | null;
+  paymentPeriod?: Guest['paymentPeriod'] | null;
   checkIn: string;
-  checkOut: string;
+  checkOut: string | null;
   status: Guest['status'];
   hostel: RawRef | null;
   room: RawRef | null;
@@ -247,7 +251,8 @@ export function normalizeAllData(
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,
-      checkOut: g.checkOut,
+      checkOut: g.checkOut ?? undefined,
+      paymentPeriod: g.paymentPeriod ?? undefined,
       status: g.status,
       totalPaid: paid,
       totalDue: due,
@@ -263,6 +268,9 @@ export function normalizeAllData(
     occupiedBeds: guests.filter((g) => g.roomId === r.documentId && g.status === 'active').length,
     type: r.type,
     pricePerBed: r.pricePerBed,
+    pricePerWeek: r.pricePerWeek ?? undefined,
+    pricePerMonth: r.pricePerMonth ?? undefined,
+    pricingPer: r.pricingPer ?? undefined,
     hasBalcony: r.hasBalcony ?? false,
     hasPrivateBathroom: r.hasPrivateBathroom ?? false,
     photos: r.photos?.map((ph) => ph.url),
@@ -367,6 +375,9 @@ export const api = {
             occupiedBeds: 0,
             type: res.data.type,
             pricePerBed: res.data.pricePerBed,
+            pricePerWeek: res.data.pricePerWeek ?? undefined,
+            pricePerMonth: res.data.pricePerMonth ?? undefined,
+            pricingPer: res.data.pricingPer ?? undefined,
           }))
         )
       );
@@ -410,6 +421,9 @@ export const api = {
           beds: room.beds,
           type: room.type,
           pricePerBed: room.pricePerBed,
+          pricePerWeek: room.pricePerWeek,
+          pricePerMonth: room.pricePerMonth,
+          pricingPer: room.pricingPer,
           hasBalcony: room.hasBalcony ?? false,
           hasPrivateBathroom: room.hasPrivateBathroom ?? false,
           hostel: { connect: [room.hostelId] },
@@ -424,6 +438,9 @@ export const api = {
       occupiedBeds: 0,
       type: r.type,
       pricePerBed: r.pricePerBed,
+      pricePerWeek: r.pricePerWeek ?? undefined,
+      pricePerMonth: r.pricePerMonth ?? undefined,
+      pricingPer: r.pricingPer ?? undefined,
       hasBalcony: r.hasBalcony ?? false,
       hasPrivateBathroom: r.hasPrivateBathroom ?? false,
       photos: r.photos?.map((ph) => ph.url),
@@ -439,8 +456,9 @@ export const api = {
           email: guest.email || undefined,
           passport: guest.passport || undefined,
           language: guest.language || undefined,
+          paymentPeriod: guest.paymentPeriod || undefined,
           checkIn: guest.checkIn,
-          checkOut: guest.checkOut,
+          checkOut: guest.checkOut || undefined,
           status: guest.status,
           hostel: { connect: [guest.hostelId] },
           room: { connect: [guest.roomId] },
@@ -456,7 +474,8 @@ export const api = {
       roomId: g.room?.documentId ?? guest.roomId,
       hostelId: g.hostel?.documentId ?? guest.hostelId,
       checkIn: g.checkIn,
-      checkOut: g.checkOut,
+      checkOut: g.checkOut ?? undefined,
+      paymentPeriod: g.paymentPeriod ?? undefined,
       status: g.status,
       totalPaid: 0,
       totalDue: 0,
@@ -469,8 +488,9 @@ export const api = {
     if (data.email !== undefined) payload.email = data.email || undefined;
     if (data.passport !== undefined) payload.passport = data.passport || undefined;
     if (data.language !== undefined) payload.language = data.language || undefined;
+    if (data.paymentPeriod !== undefined) payload.paymentPeriod = data.paymentPeriod || undefined;
     if (data.checkIn !== undefined) payload.checkIn = data.checkIn;
-    if (data.checkOut !== undefined) payload.checkOut = data.checkOut;
+    if (data.checkOut !== undefined) payload.checkOut = data.checkOut || undefined;
     if (data.status !== undefined) payload.status = data.status;
     if (data.roomId !== undefined) payload.room = { connect: [data.roomId] };
     if (data.hostelId !== undefined) payload.hostel = { connect: [data.hostelId] };
@@ -484,10 +504,11 @@ export const api = {
       email: g.email ?? '',
       passport: g.passport ?? '',
       language: g.language ?? undefined,
+      paymentPeriod: g.paymentPeriod ?? undefined,
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,
-      checkOut: g.checkOut,
+      checkOut: g.checkOut ?? undefined,
       status: g.status,
       totalPaid: 0,
       totalDue: 0,
@@ -502,10 +523,11 @@ export const api = {
       email: g.email ?? '',
       passport: g.passport ?? '',
       language: g.language ?? undefined,
+      paymentPeriod: g.paymentPeriod ?? undefined,
       roomId: g.room?.documentId ?? '',
       hostelId: g.hostel?.documentId ?? '',
       checkIn: g.checkIn,
-      checkOut: g.checkOut,
+      checkOut: g.checkOut ?? undefined,
       status: g.status,
       totalPaid: 0,
       totalDue: 0,
@@ -580,6 +602,9 @@ export const api = {
     if (data.beds !== undefined) payload.beds = data.beds;
     if (data.type !== undefined) payload.type = data.type;
     if (data.pricePerBed !== undefined) payload.pricePerBed = data.pricePerBed;
+    if (data.pricePerWeek !== undefined) payload.pricePerWeek = data.pricePerWeek;
+    if (data.pricePerMonth !== undefined) payload.pricePerMonth = data.pricePerMonth;
+    if (data.pricingPer !== undefined) payload.pricingPer = data.pricingPer;
     if (data.hasBalcony !== undefined) payload.hasBalcony = data.hasBalcony;
     if (data.hasPrivateBathroom !== undefined) payload.hasPrivateBathroom = data.hasPrivateBathroom;
     return request<{ data: RawRoom }>(`/rooms/${id}`, {
@@ -594,6 +619,9 @@ export const api = {
       occupiedBeds: 0,
       type: r.type,
       pricePerBed: r.pricePerBed,
+      pricePerWeek: r.pricePerWeek ?? undefined,
+      pricePerMonth: r.pricePerMonth ?? undefined,
+      pricingPer: r.pricingPer ?? undefined,
       hasBalcony: r.hasBalcony ?? false,
       hasPrivateBathroom: r.hasPrivateBathroom ?? false,
       photos: r.photos?.map((ph) => ph.url),

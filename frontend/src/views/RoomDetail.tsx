@@ -7,7 +7,8 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { roomOccupiedBeds, GUEST_LANGUAGES } from '../utils/helpers';
 import Modal from '../components/Modal';
 import RoomDatePicker from '../components/RoomDatePicker';
-import type { GuestLanguage } from '../types';
+import { PAYMENT_PERIODS } from '../components/RoomBillingSelect';
+import type { GuestLanguage, Room, RoomPricePeriod } from '../types';
 
 export default function RoomDetail() {
   const { id } = useParams<{ id: string }>();
@@ -214,10 +215,12 @@ export default function RoomDetail() {
                   <div className="text-right">
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Calendar size={12} />
-                      {guest.checkIn} — {guest.checkOut}
+                      {guest.checkIn} — {guest.checkOut || '—'}
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {t('Остаётся {n} дн.', { n: Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) })}
+                      {guest.checkOut
+                        ? t('Остаётся {n} дн.', { n: Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) })
+                        : t('Открытая бронь')}
                     </p>
                   </div>
                 </div>
@@ -314,23 +317,27 @@ function AddGuestRoomForm({ room, onClose }: {
   room: { id: string; number: string; hostelId: string; beds: number; pricePerBed: number };
   onClose: () => void;
 }) {
-  const { addGuestWithPayment, guests } = useData();
-  const { t, tp } = useLanguage();
+  const { addGuestWithPayment, guests, rooms } = useData();
+  const { t } = useLanguage();
+  const fullRoom = (rooms.find(r => r.id === room.id) ?? room) as Room;
   const todayStr = new Date().toISOString().split('T')[0];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [passport, setPassport] = useState('');
   const [language, setLanguage] = useState<GuestLanguage | ''>('');
+  const [period, setPeriod] = useState<RoomPricePeriod>('month');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
 
-  const nights = checkIn && checkOut ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))) : 0;
-  const totalCost = nights * room.pricePerBed;
+  const daily = fullRoom.pricePerBed;
+  const weekly = fullRoom.pricePerWeek ?? daily * 7;
+  const monthly = fullRoom.pricePerMonth ?? daily * 30;
+  const totalCost = period === 'day' ? daily : period === 'week' ? weekly : monthly;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !checkIn || !checkOut) return;
+    if (!name || !phone || !checkIn) return;
 
     try {
       await addGuestWithPayment(
@@ -343,7 +350,8 @@ function AddGuestRoomForm({ room, onClose }: {
           roomId: room.id,
           hostelId: room.hostelId,
           checkIn,
-          checkOut,
+          checkOut: checkOut || undefined,
+          paymentPeriod: period,
           status: 'active',
           totalPaid: 0,
           totalDue: totalCost,
@@ -366,6 +374,33 @@ function AddGuestRoomForm({ room, onClose }: {
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Комната')}</label>
+        <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium">{room.number}</div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Способ оплаты')}</label>
+        <div className="grid grid-cols-3 gap-2">
+          {PAYMENT_PERIODS.map(p => {
+            const price = p.value === 'day' ? daily : p.value === 'week' ? weekly : monthly;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriod(p.value)}
+                className={`px-3 py-2.5 rounded-xl border text-center transition-colors ${
+                  period === p.value
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-500'
+                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <div className="text-xs font-medium">{t(p.label)}</div>
+                <div className="text-sm font-bold mt-0.5">{price.toLocaleString()} зл</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Имя и фамилия')}</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Jan Kowalski" />
@@ -405,17 +440,15 @@ function AddGuestRoomForm({ room, onClose }: {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение')}</label>
-        <input required type="date" min={checkIn || undefined} value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Выселение (опционально)')}</label>
+        <input type="date" min={checkIn || undefined} value={checkOut} onChange={e => setCheckOut(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
-      {nights > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-indigo-600">{room.pricePerBed} зл × {tp(nights, ['{n} ночь', '{n} ночи', '{n} ночей'])}</span>
-            <span className="font-bold text-indigo-700">{totalCost.toLocaleString()} зл</span>
-          </div>
+      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-indigo-600">{t('Оплата: {n}', { n: t(period === 'day' ? 'День' : period === 'week' ? 'Неделя' : 'Месяц') })}</span>
+          <span className="font-bold text-indigo-700">{totalCost.toLocaleString()} зл</span>
         </div>
-      )}
+      </div>
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">{t('Отмена')}</button>
         <button type="submit" className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">{t('Добавить')}</button>

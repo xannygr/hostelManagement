@@ -61,7 +61,7 @@ export default function GuestDetail() {
 
   const stayMonths: { key: string; label: string; shortLabel: string; year: number; month: number; status: 'paid' | 'overdue' | 'pending' | 'none'; payment?: any }[] = [];
   const checkInDate = new Date(guest.checkIn);
-  const checkOutDate = new Date(guest.checkOut);
+  const checkOutDate = guest.checkOut ? new Date(guest.checkOut) : new Date();
   const cur = new Date(checkInDate.getFullYear(), checkInDate.getMonth(), 1);
   const end = new Date(checkOutDate.getFullYear(), checkOutDate.getMonth(), 1);
 
@@ -149,7 +149,7 @@ export default function GuestDetail() {
               <InfoRow icon={<MapPin size={18} />} label={t('Хостел')} value={hostel?.name || '-'} />
               <InfoRow icon={<MapPin size={18} />} label={t('Номер')} value={`${room?.number} · ${room?.type === 'standard' ? 'Standard' : room?.type === 'vip' ? 'VIP' : 'Economy'}`} />
               <InfoRow icon={<Calendar size={18} />} label={t('Заезд')} value={guest.checkIn} />
-              <InfoRow icon={<Calendar size={18} />} label={t('Выезд')} value={guest.checkOut} />
+              <InfoRow icon={<Calendar size={18} />} label={t('Выезд')} value={guest.checkOut || '—'} />
             </div>
           </div>
         </div>
@@ -167,7 +167,9 @@ export default function GuestDetail() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <p className="text-sm text-gray-400 mb-1">{t('До выезда')}</p>
               <p className="text-2xl font-bold text-gray-900">
-                {t('{n} дн.', { n: Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) })}
+                {guest.checkOut
+                  ? t('{n} дн.', { n: Math.max(0, Math.ceil((new Date(guest.checkOut).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) })
+                  : '—'}
               </p>
             </div>
           </div>

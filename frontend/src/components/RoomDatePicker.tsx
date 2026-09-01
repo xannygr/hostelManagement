@@ -5,7 +5,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 interface RoomDatePickerProps {
   roomId: string;
   beds: number;
-  guests: { id: string; roomId: string; checkIn: string; checkOut: string; status: string }[];
+  guests: { id: string; roomId: string; checkIn: string; checkOut?: string; status: string }[];
   value: string;
   onChange: (date: string) => void;
   minDate?: string;
@@ -25,7 +25,7 @@ export default function RoomDatePicker({ roomId, beds, guests, value, onChange, 
   const month = current.getMonth();
 
   const roomGuests = guests.filter(g => g.roomId === roomId && g.status === 'active');
-  const occupiedOn = (ds: string) => roomGuests.filter(g => g.checkIn <= ds && g.checkOut > ds).length;
+  const occupiedOn = (ds: string) => roomGuests.filter(g => g.checkIn <= ds && (!g.checkOut || g.checkOut > ds)).length;
   const freeOn = (ds: string) => Math.max(0, beds - occupiedOn(ds));
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();

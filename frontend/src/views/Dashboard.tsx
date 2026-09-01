@@ -24,7 +24,7 @@ export default function Dashboard() {
   const filteredGuests = guests.filter(g => {
     if (hostelFilter !== 'all' && g.hostelId !== hostelFilter) return false;
     if (dateFrom && g.checkIn < dateFrom) return false;
-    if (dateTo && g.checkOut > dateTo) return false;
+    if (dateTo && g.checkOut && g.checkOut > dateTo) return false;
     return true;
   });
 
@@ -316,7 +316,7 @@ export default function Dashboard() {
           allMonths.add(p.dueDate.substring(0, 7));
           if (p.paidDate) allMonths.add(p.paidDate.substring(0, 7));
         });
-        filteredGuests.forEach(g => { allMonths.add(g.checkIn.substring(0, 7)); allMonths.add(g.checkOut.substring(0, 7)); });
+        filteredGuests.forEach(g => { allMonths.add(g.checkIn.substring(0, 7)); if (g.checkOut) allMonths.add(g.checkOut.substring(0, 7)); });
         const rawMonths = [...allMonths].filter(m => m <= currentMonth).sort();
         const fullMonths: string[] = [];
         if (rawMonths.length > 0) {
@@ -354,7 +354,7 @@ export default function Dashboard() {
             const monthStart = new Date(y, mo - 1, 1);
             const monthEnd = new Date(y, mo, 0);
             const gIn = new Date(g.checkIn);
-            const gOut = new Date(g.checkOut);
+            const gOut = g.checkOut ? new Date(g.checkOut) : monthEnd;
             const stayStart = gIn > monthStart ? gIn : monthStart;
             const stayEnd = gOut < monthEnd ? gOut : monthEnd;
             if (stayStart <= stayEnd) {
@@ -362,7 +362,7 @@ export default function Dashboard() {
               guests++;
             }
             const inMonth = g.checkIn.substring(0, 7);
-            const outMonth = g.checkOut.substring(0, 7);
+            const outMonth = g.checkOut ? g.checkOut.substring(0, 7) : '';
             if (inMonth === m) checkins++;
             if (outMonth === m) checkouts++;
           });

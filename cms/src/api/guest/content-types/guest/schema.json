@@ -31,8 +31,7 @@
       "required": true
     },
     "checkOut": {
-      "type": "date",
-      "required": true
+      "type": "date"
     },
     "status": {
       "type": "enumeration",
@@ -55,6 +54,15 @@
         "fr",
         "other"
       ]
+    },
+    "paymentPeriod": {
+      "type": "enumeration",
+      "enum": [
+        "day",
+        "week",
+        "month"
+      ],
+      "default": "month"
     },
     "hostel": {
       "type": "relation",

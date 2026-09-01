@@ -15,6 +15,9 @@ export interface Hostel {
   rent?: number;
 }
 
+export type RoomPricePeriod = 'day' | 'week' | 'month';
+export type PricingPer = 'bed' | 'room';
+
 export interface Room {
   id: string;
   hostelId: string;
@@ -24,6 +27,9 @@ export interface Room {
   occupiedBeds: number;
   type: 'standard' | 'economy' | 'vip';
   pricePerBed: number;
+  pricePerWeek?: number;
+  pricePerMonth?: number;
+  pricingPer?: PricingPer;
   photos?: string[];
   hasBalcony?: boolean;
   hasPrivateBathroom?: boolean;
@@ -41,7 +47,8 @@ export interface Guest {
   roomId: string;
   hostelId: string;
   checkIn: string;
-  checkOut: string;
+  checkOut?: string;
+  paymentPeriod?: RoomPricePeriod;
   status: 'active' | 'checked_out' | 'reserved';
   totalPaid: number;
   totalDue: number;
