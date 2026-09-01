@@ -21,7 +21,7 @@
  * Run: node cms/scripts/seed-lomianki.mjs
  */
 
-const CMS = 'http://localhost:1337';
+const CMS = process.env.CMS_URL || 'http://localhost:1337';
 
 const EMAIL = 'admin@hostel.com';
 const PASSWORD = 'admin123';
@@ -79,10 +79,18 @@ async function api(token, method, path, body) {
 }
 
 async function main() {
-  console.log('🔑 Logging in...');
+  console.log(`🔑 Logging in to ${CMS}...`);
   const token = await login();
   console.log('  ✓ Token received\n');
 
+  const existing = await api(token, 'GET', '/hostels?filters[name][$eq]=Lomianki');
+  const existingHostel = existing.data?.[0];
+  if (existingHostel) {
+    console.log(`⚠️  Hostel "Lomianki" already exists (${existingHostel.documentId}). Skipping.`);
+    return;
+  }
+
+  const roomsUrl = '/rooms?pagination[pageSize]=1';
   console.log(`🏠 Creating hostel "${HOSTEL.name}"...`);
   const { data: hostel } = await api(token, 'POST', '/hostels', { data: HOSTEL });
   console.log(`  ✓ ${hostel.name} (${hostel.documentId})\n`);
