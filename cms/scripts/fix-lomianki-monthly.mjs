@@ -29,11 +29,10 @@ async function main() {
   const token = await login();
   const rooms = (await api(token, 'GET', `/rooms?filters[hostel][documentId][$eq]=${HOSTEL_DOC}&pagination[limit]=100`)).data;
 
-  const targets = [2200, 1000];
+  const targets = [2200, 1000, 800, 600];
   let updated = 0;
   for (const r of rooms) {
-    if (r.floor !== 1 || !targets.includes(r.pricePerBed)) continue;
-    const monthly = r.pricePerBed;
+    if (!targets.includes(r.pricePerBed)) continue;    const monthly = r.pricePerBed;
     const weekly = Math.round(monthly / 4);
     const daily = Math.round(monthly / 30);
     if (r.pricePerMonth === monthly && r.pricePerWeek === weekly && r.pricePerBed === daily) continue;
@@ -43,7 +42,7 @@ async function main() {
     console.log(`  ✓ ${r.number} (${r.type}): day=${daily} week=${weekly} month=${monthly} (was bed ${r.pricePerBed}, month ${r.pricePerMonth})`);
     updated++;
   }
-  console.log(`\n✅ Lomianki 1st floor: ${updated} rooms updated to monthly pricing.`);
+  console.log(`\n✅ Lomianki: ${updated} rooms updated to monthly pricing.`);
 }
 
 main().catch(e => { console.error('❌', e.message); process.exit(1); });
