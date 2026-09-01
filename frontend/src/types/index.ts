@@ -23,6 +23,7 @@ export interface Room {
   hostelId: string;
   number: string;
   floor: number;
+  wing?: number;
   beds: number;
   occupiedBeds: number;
   type: 'standard' | 'economy' | 'vip';

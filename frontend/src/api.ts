@@ -66,6 +66,7 @@ interface RawRoom {
   documentId: string;
   number: string;
   floor: number;
+  wing?: number | null;
   beds: number;
   type: Room['type'];
   pricePerBed: number;
@@ -264,6 +265,7 @@ export function normalizeAllData(
     hostelId: r.hostel?.documentId ?? '',
     number: r.number,
     floor: r.floor,
+    wing: r.wing ?? undefined,
     beds: r.beds,
     occupiedBeds: guests.filter((g) => g.roomId === r.documentId && g.status === 'active').length,
     type: r.type,
@@ -360,6 +362,7 @@ export const api = {
               data: {
                 number: r.number,
                 floor: r.floor,
+                wing: r.wing ?? 1,
                 beds: r.beds,
                 type: r.type,
                 pricePerBed: r.pricePerBed,
@@ -371,6 +374,7 @@ export const api = {
             hostelId: h.documentId,
             number: res.data.number,
             floor: res.data.floor,
+            wing: res.data.wing ?? undefined,
             beds: res.data.beds,
             occupiedBeds: 0,
             type: res.data.type,
@@ -418,6 +422,7 @@ export const api = {
         data: {
           number: room.number,
           floor: room.floor,
+          wing: room.wing ?? 1,
           beds: room.beds,
           type: room.type,
           pricePerBed: room.pricePerBed,
@@ -434,6 +439,7 @@ export const api = {
       hostelId: r.hostel?.documentId ?? room.hostelId,
       number: r.number,
       floor: r.floor,
+      wing: r.wing ?? undefined,
       beds: r.beds,
       occupiedBeds: 0,
       type: r.type,
@@ -599,6 +605,7 @@ export const api = {
     const payload: Record<string, unknown> = {};
     if (data.number !== undefined) payload.number = data.number;
     if (data.floor !== undefined) payload.floor = data.floor;
+    if (data.wing !== undefined) payload.wing = data.wing;
     if (data.beds !== undefined) payload.beds = data.beds;
     if (data.type !== undefined) payload.type = data.type;
     if (data.pricePerBed !== undefined) payload.pricePerBed = data.pricePerBed;
@@ -615,6 +622,7 @@ export const api = {
       hostelId: r.hostel?.documentId ?? '',
       number: r.number,
       floor: r.floor,
+      wing: r.wing ?? undefined,
       beds: r.beds,
       occupiedBeds: 0,
       type: r.type,

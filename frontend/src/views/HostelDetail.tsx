@@ -35,6 +35,7 @@ export default function HostelDetail() {
   const [editRent, setEditRent] = useState<number | undefined>();
   const [newRoomNumber, setNewRoomNumber] = useState('');
   const [newRoomFloor, setNewRoomFloor] = useState(1);
+  const [newRoomWing, setNewRoomWing] = useState(1);
   const [newRoomBeds, setNewRoomBeds] = useState(2);
   const [newRoomType, setNewRoomType] = useState<Room['type']>('standard');
   const [newRoomPrice, setNewRoomPrice] = useState(85);
@@ -120,7 +121,7 @@ export default function HostelDetail() {
               )}
             </div>
           </div>
-          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setEditRent(hostel.rent ?? 0); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+          <button onClick={() => { setEditName(hostel.name); setEditAddress(hostel.address); setEditFloors(hostel.floors); setEditKitchens(hostel.kitchens); setEditParking(hostel.parking ?? ''); setEditShowers(hostel.showers); setEditToilets(hostel.toilets); setEditRent(hostel.rent ?? 0); setNewRoomNumber(''); setNewRoomFloor(1); setNewRoomWing(1); setNewRoomBeds(2); setNewRoomType('standard'); setNewRoomPrice(85); setNewRoomBalcony(false); setNewRoomBathroom(false); setShowEditHostel(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
             <            Edit3 size={16} />
             {t('Редактировать')}
           </button>
@@ -222,6 +223,7 @@ export default function HostelDetail() {
             addRoom({
               number: newRoomNumber.trim(),
               floor: newRoomFloor,
+              wing: newRoomWing,
               beds: newRoomBeds,
               type: newRoomType,
               pricePerBed: newRoomPrice,
@@ -281,6 +283,10 @@ export default function HostelDetail() {
               <div>
                 <label className="block text-xs text-gray-400 mb-1">{t('Этаж')}</label>
                 <input type="number" min={0} value={newRoomFloor} onChange={e => setNewRoomFloor(parseInt(e.target.value) || 0)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">{t('Крыло')}</label>
+                <input type="number" min={1} value={newRoomWing} onChange={e => setNewRoomWing(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">{t('Кровати')}</label>
@@ -376,14 +382,26 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
       <div className="space-y-6">
         {filteredFloors.map(floor => {
           const floorRooms = filteredRooms.filter(r => r.floor === floor);
+          const wings = [...new Set(floorRooms.map(r => r.wing ?? 1))].sort((a, b) => a - b);
+          const multipleWings = wings.length > 1;
           return (
             <div key={floor}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">{t('Этаж {n}', { n: floor })}</span>
                 <div className="flex-1 h-px bg-gray-100" />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {floorRooms.map(room => {
+              {wings.map(wing => {
+                const wingRooms = floorRooms.filter(r => (r.wing ?? 1) === wing);
+                return (
+                  <div key={wing} className={multipleWings ? 'mb-5' : ''}>
+                    {multipleWings && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{t('Крыло {n}', { n: wing })}</span>
+                        <div className="flex-1 h-px bg-gray-50" />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {wingRooms.map(room => {
                   const actualOccupied = roomOccupiedBeds(room.id, guests);
                   const isFull = actualOccupied === room.beds;
                   const isEmpty = actualOccupied === 0;
@@ -455,10 +473,13 @@ function RoomMap({ rooms, guests, roomTypeFilter, setRoomTypeFilter }: { rooms: 
                   );
                 })}
               </div>
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+          </div>
+        );
+      })}
+    </div>
 
       {addGuestRoom && (
         <Modal isOpen={!!addGuestRoom} onClose={() => setAddGuestRoom(null)} title={t('Добавить гостя — Номер {n}', { n: addGuestRoom.number })}>

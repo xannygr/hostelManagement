@@ -10,13 +10,14 @@ import type { Room } from '../types';
 type FormRoom = {
   number: string;
   floor: number;
+  wing: number;
   beds: number;
   type: Room['type'];
   pricePerBed: number;
 };
 
 function emptyRoom(): FormRoom {
-  return { number: '', floor: 1, beds: 2, type: 'standard', pricePerBed: 85 };
+  return { number: '', floor: 1, wing: 1, beds: 2, type: 'standard', pricePerBed: 85 };
 }
 
 export default function HostelsList() {
@@ -50,6 +51,7 @@ export default function HostelsList() {
       validRooms.map(r => ({
         number: r.number.trim(),
         floor: r.floor,
+        wing: r.wing,
         beds: r.beds,
         type: r.type,
         pricePerBed: r.pricePerBed,
@@ -221,6 +223,16 @@ export default function HostelsList() {
                         value={room.floor}
                         onChange={e => updateRoom(i, 'floor', parseInt(e.target.value) || 0)}
                         min={0}
+                        className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{t('Крыло')}</label>
+                      <input
+                        type="number"
+                        value={room.wing}
+                        onChange={e => updateRoom(i, 'wing', parseInt(e.target.value) || 1)}
+                        min={1}
                         className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                     </div>

@@ -642,18 +642,19 @@ function RoomCheckoutCalendar({ beds, roomGuests }: { beds: number; roomGuests: 
   );
 }
 
-function EditRoomForm({ room, onClose }: { room: { id: string; number: string; floor: number; beds: number; type: string; pricePerBed: number; photos?: string[] }; onClose: () => void }) {
+function EditRoomForm({ room, onClose }: { room: { id: string; number: string; floor: number; wing?: number; beds: number; type: string; pricePerBed: number; photos?: string[] }; onClose: () => void }) {
   const { updateRoom } = useData();
   const { t } = useLanguage();
   const [number, setNumber] = useState(room.number);
   const [floor, setFloor] = useState(room.floor);
+  const [wing, setWing] = useState(room.wing ?? 1);
   const [beds, setBeds] = useState(room.beds);
   const [type, setType] = useState(room.type);
   const [price, setPrice] = useState(room.pricePerBed);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateRoom(room.id, { number, floor, beds, type: type as 'standard' | 'economy' | 'vip', pricePerBed: price });
+    updateRoom(room.id, { number, floor, wing, beds, type: type as 'standard' | 'economy' | 'vip', pricePerBed: price });
     onClose();
   };
 
@@ -667,6 +668,10 @@ function EditRoomForm({ room, onClose }: { room: { id: string; number: string; f
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Этаж')}</label>
           <input required type="number" min={0} value={floor} onChange={e => setFloor(Number(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('Крыло')}</label>
+          <input required type="number" min={1} value={wing} onChange={e => setWing(Number(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
